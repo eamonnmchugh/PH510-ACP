@@ -1,0 +1,29 @@
+===================================================================================
+SLURM Job ID:            11723027
+Submit time:             Wed Feb 05 19:49:28 GMT 2025 (Unix Epoch time: 1738784968)
+Start time:              Wed Feb 05 19:50:38 GMT 2025 (Unix Epoch time: 1738785038)
+No. nodes:               1
+No. tasks:               1
+Job name:                assignment1
+Account:                 teaching
+QoS:                     teaching
+Partition (queue):       teaching
+Submit directory:        /users/cgb20140/Documents/PH510/Assignment_1
+Script name:             /users/cgb20140/Documents/PH510/Assignment_1/Assignment1_1_ntask.sh
+Master node:             wee23
+Nodes used:              wee23
+Task distribution:       
+===================================================================================
+
+
+--------------------------------------------------------------------
+Your code has been rated at 10.00/10 (previous run: 10.00/10, +0.00)
+
+The code was run using 1 processors
+From the integral, the value of pi was found to be 3.14159265358979
+The runtime was 0.03607034683227539 seconds
+===================================================================================
+SLURM job 11723027 ended:     Wed Feb 05 19:49:12 GMT 2025 (Unix Epoch time: 1738784952)
+This is an estimated end time using the 'date' command from node wee23.hpc.strath.ac.uk
+For accurate timings, use 'sacct -j 11723027 -X --format=Submit,Start,End,Elapsed'
+======================================================================================
