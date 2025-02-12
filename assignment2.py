@@ -58,6 +58,15 @@ class Vector:
         sz = (self.x * other.y) - (self.y * other.x)
         return Vector(sx, sy, sz)
 
+    def cart_to_sphere(self):
+        """
+        Converting cartesian coordinates to spherical
+        """
+        r = math.sqrt(self.x**2 + self.y**2 + self.z**2)
+        theta = math.atan(self.y/self.x)
+        phi = math.acos(self.z/r)
+        return Spherical(r, theta, phi)
+
 # ------------------------------------------------------------------------------------------------
 # Task 1b: Print the vector an object holds
 print("Task 1b")
@@ -103,7 +112,75 @@ G = A.cross(B)
 print("Cross product of A and B is", G)
 print()
 
+# ------------------------------------------------------------------------------------------------
+# Task 2: Inherit from Task 1 to make a new class that handle vectors in spherical-polar coords
+print("Task 2")
 
+class Spherical(Vector):
+    """
+    Inherits the Vector class to define a vector using polar-spherical coordinates
+    """
+    def __init__(self, r, theta, phi):
+        self.r = r
+        self.theta = theta
+        self.phi = phi
+        self.x = self.r * math.sin(self.theta) * math.cos(self.phi)
+        self.y = self.r * math.sin(self.theta) * math.sin(self.phi)
+        self.z = self.r * math.cos(self.theta)
+
+    def __str__(self):
+        """
+        Assumes floating point when printing
+        """
+        return f"Spherical Vector:({self.r:.3f}, {self.theta:.3f}, {self.phi:.3f})"
+
+    def __add__(self, other):
+        """
+        Addition of vectors in spherical coords via temporary convertion to cartesian
+        """
+        Cartesian_Sum = Vector(self.x + other.x, self.y + other.y, self.z + other.z)
+        return Cartesian_Sum.cart_to_sphere()
+
+    def __sub__(self, other):
+        """
+        Addition of vectors in spherical coords via temporary convertion to cartesian
+        """
+        Cartesian_Diff = Vector(self.x - other.x, self.y - other.y, self.z - other.z)
+        return Cartesian_Diff.cart_to_sphere()
+
+    def cross(self, other):
+        """
+        Computes the cross (vector) product of two vectors
+        """
+        sx = (self.y * other.z) - (self.z * other.y)
+        sy = (self.z * other.x) - (self.x * other.z)
+        sz = (self.x * other.y) - (self.y * other.x)
+        Cartesian_Cross = Vector(sx, sy, sz)
+        return Cartesian_Cross.cart_to_sphere()
+
+    def magnitude(self):
+        """
+        Magnitude of a vector in spherical coordinates
+        """
+        return self.r
+
+A2 = Spherical(1, 25*np.pi/180, 43*np.pi/180)
+print("Initial spherical coord vector A2 is", A2)
+
+B2 = Spherical(5, 60*np.pi/180, 9*np.pi/180)
+print("Secondary vector B2 is", B2)
+
+C2 = A2 + B2
+D2 = A2 - B2
+E2 = B2 - A2
+F2 = A2.dot(B2)
+G2 = A2.cross(B2)
+print("Addition of vectors A2 and B2 gives", C2)
+print("Subtraction of vector B2 from A2 returns", D2)
+print("Subtraction of vector A2 from B2 returns", E2)
+print("Dot product of A2 and B2 is", F2)
+print("Cross product of A2 and B2 is", G2)
+print()
 
 
 
