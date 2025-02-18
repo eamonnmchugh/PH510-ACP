@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 
 """
-This program
+This program makes use of object classes to define a set of functions for use in vector
+calculations. By defining a set of rules for vectors in both Cartesian and Spherical-Polar
+coordinates, and being given multiple trios of vertices that each describe a triangle in 3D space,
+the area and internal angles of said triangle were determined.
 """
 
 import math
@@ -12,7 +15,7 @@ import numpy as np
 
 class Vector:
     """
-    Vector class for 2D quantities
+    Vector class for 3D quantities
     """
     def __init__(self, x, y, z):
         self.x = x
@@ -63,22 +66,36 @@ class Vector:
         Converting cartesian coordinates to spherical
         """
         r = math.sqrt(self.x**2 + self.y**2 + self.z**2)
-        theta = math.atan(self.y/self.x)
+        if self.x == 0:
+            theta = math.pi/2
+        else:
+            theta = math.atan(self.y/self.x)
         phi = math.acos(self.z/r)
         return Spherical(r, theta, phi)
 
-    def angle(self, other):
+    def angle(self, vert_b, vert_c):
         """
-        Calculates the angle between two vectors
+        Calculates the internal angles of a triangle defined by three vertices
         """
-        return math.acos(self.dot(other)/(self.norm() * other.norm()))
+        vec_ab = Vector(vert_b.x - self.x, vert_b.y - self.y, vert_b.z - self.z)
+        vec_ac = Vector(vert_c.x - self.x, vert_c.y - self.y, vert_c.z - self.z)
+        vec_bc = Vector(vert_c.x - vert_b.x, vert_c.y - vert_b.y, vert_c.z - vert_b.z)
+        vec_ba = Vector(self.x - vert_b.x, self.y - vert_b.y, self.z - vert_b.z)
+        vec_ca = Vector(self.x - vert_c.x, self.y - vert_c.y, self.z - vert_c.z)
+        vec_cb = Vector(vert_b.x - vert_c.x, vert_b.y - vert_c.y, vert_b.z - vert_c.z)
+        angle_abc = math.acos(vec_ba.dot(vec_bc)/(vec_ba.norm() * vec_bc.norm()))
+        angle_bac = math.acos(vec_ab.dot(vec_ac)/(vec_ab.norm() * vec_ac.norm()))
+        angle_bca = math.acos(vec_cb.dot(vec_ca)/(vec_cb.norm() * vec_ca.norm()))
+        return angle_abc * 180/math.pi, angle_bac * 180/math.pi, angle_bca * 180/math.pi
 
-    def negative(self):
+    def tri_area(self, vert_b, vert_c):
         """
-        Returns a vector that is anti-parallel to the given vector
+        Calculates the area of a triangle with given vertices
         """
-        return Vector(-self.x, -self.y, -self.z)  
-
+        vec_ab = Vector(vert_b.x - self.x, vert_b.y - self.y, vert_b.z - self.z)
+        vec_ac = Vector(vert_c.x - self.x, vert_c.y - self.y, vert_c.z - self.z)
+        cross = vec_ab.cross(vec_ac)
+        return 0.5 * cross.norm()
 
 # ------------------------------------------------------------------------------------------------
 # Task 1b: Print the vector an object holds
@@ -135,11 +152,22 @@ class Spherical(Vector):
     """
     def __init__(self, r, theta, phi):
         self.r = r
-        self.theta = theta
-        self.phi = phi
+        if phi > math.pi:
+            self.theta = theta + math.pi
+            self.phi = phi - math.pi
+        else:
+            self.theta = theta
+            self.phi = phi
         self.x = self.r * math.sin(self.theta) * math.cos(self.phi)
         self.y = self.r * math.sin(self.theta) * math.sin(self.phi)
         self.z = self.r * math.cos(self.theta)
+        if np.abs(self.x) < 0.0001:
+            self.x = 0
+        if np.abs(self.y) < 0.0001:
+            self.y = 0
+        if np.abs(self.z) < 0.0001:
+            self.z = 0
+        super().__init__(self.x, self.y, self.z)
 
     def __str__(self):
         """
@@ -151,15 +179,15 @@ class Spherical(Vector):
         """
         Addition of vectors in spherical coords via temporary convertion to cartesian
         """
-        Cartesian_Sum = Vector(self.x + other.x, self.y + other.y, self.z + other.z)
-        return Cartesian_Sum.cart_to_sphere()
+        cartesian_sum = Vector(self.x + other.x, self.y + other.y, self.z + other.z)
+        return cartesian_sum.cart_to_sphere()
 
     def __sub__(self, other):
         """
         Addition of vectors in spherical coords via temporary convertion to cartesian
         """
-        Cartesian_Diff = Vector(self.x - other.x, self.y - other.y, self.z - other.z)
-        return Cartesian_Diff.cart_to_sphere()
+        cartesian_diff = Vector(self.x - other.x, self.y - other.y, self.z - other.z)
+        return cartesian_diff.cart_to_sphere()
 
     def cross(self, other):
         """
@@ -168,8 +196,8 @@ class Spherical(Vector):
         sx = (self.y * other.z) - (self.z * other.y)
         sy = (self.z * other.x) - (self.x * other.z)
         sz = (self.x * other.y) - (self.y * other.x)
-        Cartesian_Cross = Vector(sx, sy, sz)
-        return Cartesian_Cross.cart_to_sphere()
+        cartesian_cross = Vector(sx, sy, sz)
+        return cartesian_cross.cart_to_sphere()
 
     def magnitude(self):
         """
@@ -177,10 +205,10 @@ class Spherical(Vector):
         """
         return self.r
 
-A2 = Spherical(1, 25*np.pi/180, 43*np.pi/180)
+A2 = Spherical(1, 25*math.pi/180, 43*math.pi/180)
 print("Initial spherical coord vector A2 is", A2)
 
-B2 = Spherical(5, 60*np.pi/180, 9*np.pi/180)
+B2 = Spherical(5, 60*math.pi/180, 9*math.pi/180)
 print("Secondary vector B2 is", B2)
 
 C2 = A2 + B2
@@ -204,12 +232,7 @@ Vert_A1 = Vector(0, 0, 0)
 Vert_B1 = Vector(1, 0, 0)
 Vert_C1 = Vector(0, 1, 0)
 
-AB = Vert_B1 - Vert_A1
-AC = Vert_C1 - Vert_A1
-BC = Vert_C1 - Vert_B1
-BAC_Angle = AB.angle(AC)
-
-Area_1 = 0.5 * AB.norm() * AC.norm() * math.sin(BAC_Angle)
+Area_1 = Vert_A1.tri_area(Vert_B1, Vert_C1)
 print("The area of the first triangle is", Area_1)
 
 # Triangle 2 (with vertices at A = (-1, -1, -1), B = (0, -1, -1) and C = (-1, 0, -1))
@@ -217,12 +240,7 @@ Vert_A2 = Vector(-1, -1, -1)
 Vert_B2 = Vector(0, -1, -1)
 Vert_C2 = Vector(-1, 0, -1)
 
-AB_2 = Vert_B2 - Vert_A2
-AC_2 = Vert_C2 - Vert_A2
-BC_2 = Vert_C2 - Vert_B2
-BAC_Angle_2 = AB_2.angle(AC_2)
-
-Area_2 = 0.5 * AB_2.norm() * AC_2.norm() * math.sin(BAC_Angle_2)
+Area_2 = Vert_A2.tri_area(Vert_B2, Vert_C2)
 print("The area of the second triangle is", Area_2)
 
 # Triangle 3 (with vertices at A = (1, 0, 0), B = (0, 0, 1) and C = (0, 0, 0))
@@ -230,12 +248,7 @@ Vert_A3 = Vector(1, 0, 0)
 Vert_B3 = Vector(0, 0, 1)
 Vert_C3 = Vector(0, 0, 0)
 
-AB_3 = Vert_B3 - Vert_A3
-AC_3 = Vert_C3 - Vert_A3
-BC_3 = Vert_C3 - Vert_B3
-BAC_Angle_3 = AB_3.angle(AC_3)
-
-Area_3 = 0.5 * AB_3.norm() * AC_3.norm() * math.sin(BAC_Angle_3)
+Area_3 = Vert_A3.tri_area(Vert_B3, Vert_C3)
 print("The area of the third triangle is", Area_3)
 
 # Triangle 4 (with vertices at A = (0, 0, 0), B = (1, -1, 0) and C = (0, 0, 1))
@@ -243,13 +256,8 @@ Vert_A4 = Vector(0, 0, 0)
 Vert_B4 = Vector(1, -1, 0)
 Vert_C4 = Vector(0, 0, 1)
 
-AB_4 = Vert_B4 - Vert_A4
-AC_4 = Vert_C4 - Vert_A4
-BC_4 = Vert_C4 - Vert_B4
-BAC_Angle_4 = AB_4.angle(AC_4)
-
-Area_4 = 0.5 * AB_4.norm() * AC_4.norm() * math.sin(BAC_Angle_4)
-print("The area of the fourth triangle is", Area_4)
+Area_4 = Vert_A4.tri_area(Vert_B4, Vert_C4)
+print(f"The area of the fourth triangle is {Area_4:0.3f}")
 print()
 
 #-------------------------------------------------------------------------------------------------
@@ -257,52 +265,82 @@ print()
 print("Task 3b")
 
 # Triangle 1
-BA = AB.negative()
-CA = AC.negative()
-CB = BC.negative()
-
-ABC_Angle = BA.angle(BC)
-ACB_Angle = CA.angle(CB)
-print("The internal angles of Triangle 1 were BAC =", BAC_Angle, "rad, ABC =", ABC_Angle, "rad and ACB =", ACB_Angle, "rad")
+Angle_1 = Vert_A1.angle(Vert_B1, Vert_C1)
+print(f"The internal angles of Triangle 1 were ABC = {Angle_1[0]:2.1f}°,",
+f"BAC = {Angle_1[1]:2.1f}°", f"and BCA = {Angle_1[2]:2.1f}°")
 
 # Triangle 2
-BA_2 = AB_2.negative()
-CA_2 = AC_2.negative()
-CB_2 = BC_2.negative()
-
-ABC_Angle_2 = BA_2.angle(BC_2)
-ACB_Angle_2 = CA_2.angle(CB_2)
-print("The internal angles of Triangle 2 were BAC =", BAC_Angle_2, "rad, ABC =", ABC_Angle_2, "rad and ACB =", ACB_Angle_2, "rad")
+Angle_2 = Vert_A2.angle(Vert_B2, Vert_C2)
+print(f"The internal angles of Triangle 2 were ABC = {Angle_2[0]:2.1f}°,",
+f"BAC = {Angle_2[1]:2.1f}°", f"and BCA = {Angle_2[2]:2.1f}°")
 
 # Triangle 3
-BA_3 = AB_3.negative()
-CA_3 = AC_3.negative()
-CB_3 = BC_3.negative()
-
-ABC_Angle_3 = BA_3.angle(BC_3)
-ACB_Angle_3 = CA_3.angle(CB_3)
-print("The internal angles of Triangle 3 were BAC =", BAC_Angle_3, "rad, ABC =", ABC_Angle_3, "rad and ACB =", ACB_Angle_3, "rad")
+Angle_3 = Vert_A3.angle(Vert_B3, Vert_C3)
+print(f"The internal angles of Triangle 3 were ABC = {Angle_3[0]:2.1f}°,",
+f"BAC = {Angle_3[1]:2.1f}°", f"and BCA = {Angle_3[2]:2.1f}°")
 
 # Triangle 4
-BA_4 = AB_4.negative()
-CA_4 = AC_4.negative()
-CB_4 = BC_4.negative()
-
-ABC_Angle_4 = BA_4.angle(BC_4)
-ACB_Angle_4 = CA_4.angle(CB_4)
-print("The internal angles of Triangle 4 were BAC =", BAC_Angle_4, "rad, ABC =", ABC_Angle_4, "rad and ACB =", ACB_Angle_4, "rad")
+Angle_4 = Vert_A4.angle(Vert_B4, Vert_C4)
+print(f"The internal angles of Triangle 4 were ABC = {Angle_4[0]:2.1f}°,",
+f"BAC = {Angle_4[1]:2.1f}°", f"and BCA = {Angle_4[2]:2.1f}°")
 print()
 
 #-------------------------------------------------------------------------------------------------
-# Task 3c: Perform similar tasks to parts 3a and 3b, for points specified in spherical polar coordinates, with angles in degrees
+# Task 3c: Perform similar tasks to parts 3a and 3b, for points specified in spherical polar
+# coordinates (angles in degrees)
 print("Task 3c")
 
-# Triangle 1, with vertices specified by polar coordinates A = (0, 0, 0), B = (1, 0, 0) and C = (1, 90, 0)
+# Triangle 1, with vertices specified by spherical polar coordinates A = (0, 0, 0),
+# B = (1, 0, 0) and C = (1, 90, 0)
 
 Sph_A1 = Spherical(0, 0, 0)
 Sph_B1 = Spherical(1, 0, 0)
-Sph_C1 = Spherical(1, 90*np.pi/180, 0)
+Sph_C1 = Spherical(1, 90*math.pi/180, 0)
 
+Sph_Area_1 = Sph_A1.tri_area(Sph_B1, Sph_C1)
+Sph_Angle_1 = Sph_A1.angle(Sph_B1, Sph_C1)
+print("The area of the first triangle is", Sph_Area_1)
+print(f"With internal angles ABC = {Sph_Angle_1[0]:2.1f}°,", f"BAC = {Sph_Angle_1[1]:2.1f}°",
+f"and BCA = {Sph_Angle_1[2]:2.1f}°")
+print()
 
+# Triangle 2, with vertices specified by spherical polar coordinates A = (1, 0, 0),
+# B = (1, 90, 0) and C = (1, 90, 180)
 
+Sph_A2 = Spherical(1, 0, 0)
+Sph_B2 = Spherical(1, 90*math.pi/180, 0)
+Sph_C2 = Spherical(1, 90*math.pi/180, math.pi)
 
+Sph_Area_2 = Sph_A2.tri_area(Sph_B2, Sph_C2)
+Sph_Angle_2 = Sph_A2.angle(Sph_B2, Sph_C2)
+print("The area of the second triangle is", Sph_Area_2)
+print(f"With internal angles ABC = {Sph_Angle_2[0]:2.1f}°,", f"BAC = {Sph_Angle_2[1]:2.1f}°",
+f"and BCA = {Sph_Angle_2[2]:2.1f}°")
+print()
+
+# Triangle 3, with vertices specified by spherical polar coordinates A = (0, 0, 0),
+# B = (2, 0, 0) and C = (2, 90, 0)
+
+Sph_A3 = Spherical(0, 0, 0)
+Sph_B3 = Spherical(2, 0, 0)
+Sph_C3 = Spherical(2, 90*math.pi/180, 0)
+
+Sph_Area_3 = Sph_A3.tri_area(Sph_B3, Sph_C3)
+Sph_Angle_3 = Sph_A3.angle(Sph_B3, Sph_C3)
+print("The area of the third triangle is", Sph_Area_3)
+print(f"With internal angles ABC = {Sph_Angle_3[0]:2.1f}°,", f"BAC = {Sph_Angle_3[1]:2.1f}°",
+f"and BCA = {Sph_Angle_3[2]:2.1f}°")
+print()
+
+# Triangle 4, with vertices specified by spherical polar coordinates A = (1, 90, 0),
+# B = (1, 90, 180) and C = (1, 90, 270)
+
+Sph_A4 = Spherical(1, 90*math.pi/180, 0)
+Sph_B4 = Spherical(1, 90*math.pi/180, math.pi)
+Sph_C4 = Spherical(1, 90*math.pi/180, 3*math.pi/2)
+
+Sph_Area_4 = Sph_A4.tri_area(Sph_B4, Sph_C4)
+Sph_Angle_4 = Sph_A4.angle(Sph_B4, Sph_C4)
+print("The area of the fourth triangle is", Sph_Area_4)
+print(f"With internal angles ABC = {Sph_Angle_4[0]:2.1f}°,",f"BAC = {Sph_Angle_4[1]:2.1f}°",
+f"and BCA = {Sph_Angle_4[2]:2.1f}°")
