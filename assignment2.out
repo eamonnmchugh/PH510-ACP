@@ -1,0 +1,75 @@
+===================================================================================
+SLURM Job ID:            11767565
+Submit time:             Wed Feb 19 14:43:55 GMT 2025 (Unix Epoch time: 1739976235)
+Start time:              Wed Feb 19 14:43:56 GMT 2025 (Unix Epoch time: 1739976236)
+No. nodes:               1
+No. tasks:               1
+Job name:                assignment2
+Account:                 teaching
+QoS:                     teaching
+Partition (queue):       teaching
+Submit directory:        /users/cgb20140/Documents/PH510/Assignment_2
+Script name:             /users/cgb20140/Documents/PH510/Assignment_2/Assignment2.sh
+Master node:             wee22
+Nodes used:              wee22
+Task distribution:       
+===================================================================================
+
+
+--------------------------------------------------------------------
+Your code has been rated at 10.00/10 (previous run: 10.00/10, +0.00)
+
+Task 1b
+Initial vector A is Vector:(2.000, 5.000, 7.000)
+
+Task 1c
+The magnitude of vector A is 8.831760866327848
+
+Task 1d
+Secondary vector B is Vector:(3.000, 4.000, 2.000)
+Addition of vectors A and B gives Vector:(5.000, 9.000, 9.000)
+Subtraction of vector B from A returns Vector:(-1.000, 1.000, 5.000)
+Subtraction of vector A from B returns Vector:(1.000, -1.000, -5.000)
+
+Task 1e
+Dot product of A and B is 40
+Cross product of A and B is Vector:(-18.000, 17.000, -7.000)
+
+Task 2
+Initial spherical coord vector A2 is Spherical Vector:(1.000, 0.436, 0.750)
+Secondary vector B2 is Spherical Vector:(5.000, 1.047, 0.157)
+Addition of vectors A2 and B2 gives Spherical Vector:(5.794, 0.208, 0.942)
+Subtraction of vector B2 from A2 returns Spherical Vector:(4.294, 0.098, 1.951)
+Subtraction of vector A2 from B2 returns Spherical Vector:(4.294, 0.098, 1.191)
+Dot product of A2 and B2 is 3.7829005599643644
+Cross product of A2 and B2 is Spherical Vector:(3.270, 1.536, 1.889)
+
+Task 3a
+The area of the first triangle is 0.5
+The area of the second triangle is 0.5
+The area of the third triangle is 0.5
+The area of the fourth triangle is 0.707
+
+Task 3b
+The internal angles of Triangle 1 were ABC = 45.0°, BAC = 90.0° and BCA = 45.0°
+The internal angles of Triangle 2 were ABC = 45.0°, BAC = 90.0° and BCA = 45.0°
+The internal angles of Triangle 3 were ABC = 45.0°, BAC = 45.0° and BCA = 90.0°
+The internal angles of Triangle 4 were ABC = 35.3°, BAC = 90.0° and BCA = 54.7°
+
+Task 3c
+The area of the first triangle is 0.5
+With internal angles ABC = 45.0°, BAC = 90.0° and BCA = 45.0°
+
+The area of the second triangle is 1.0
+With internal angles ABC = 45.0°, BAC = 90.0° and BCA = 45.0°
+
+The area of the third triangle is 2.0
+With internal angles ABC = 45.0°, BAC = 90.0° and BCA = 45.0°
+
+The area of the fourth triangle is 1.0
+With internal angles ABC = 45.0°, BAC = 45.0° and BCA = 90.0°
+===================================================================================
+SLURM job 11767565 ended:     Wed Feb 19 14:40:12 GMT 2025 (Unix Epoch time: 1739976012)
+This is an estimated end time using the 'date' command from node wee22.hpc.strath.ac.uk
+For accurate timings, use 'sacct -j 11767565 -X --format=Submit,Start,End,Elapsed'
+======================================================================================
