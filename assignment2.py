@@ -199,12 +199,6 @@ class Spherical(Vector):
         cartesian_cross = Vector(sx, sy, sz)
         return cartesian_cross.cart_to_sphere()
 
-    def magnitude(self):
-        """
-        Magnitude of a vector in spherical coordinates
-        """
-        return self.r
-
 A2 = Spherical(1, 25*math.pi/180, 43*math.pi/180)
 print("Initial spherical coord vector A2 is", A2)
 
