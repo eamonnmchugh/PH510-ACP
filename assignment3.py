@@ -44,15 +44,13 @@ class Points:
         """
         j = 0
         dim_sum = np.zeros((self.n, 1))
-        r = np.zeros((self.n, 1))
         while j < self.n:
             i = 0
             while i < self.d:
                 dim_sum[j][0] = dim_sum[j][0] + (self.points[j][i])**2
-                r[j][0] = np.sqrt(dim_sum[j][0])
                 i = i + 1
             j = j + 1
-        return r
+        return dim_sum
 
     def box_location(self):
         """
@@ -63,27 +61,31 @@ class Points:
         while j < self.n:
             if self.r_vector()[j][0] <= 1:
                 within = within + 1
-                j = j + 1
-            else:
-                j = j + 1
-        return within, within/self.n * 100
+            j = j + 1
+        return within
         
+    def MonteCarlo(self, function, a, b):
+        """
+        
+        """
+        A = function()
+        A2 = A**2
+        average = 1/self.n * np.sum(A)
+        average_2 = 1/self.n * np.sum(A2)
+        integral = (b - a) * average
+        variance = 1/self.n * (average_2 - average**2)
+        return average, integral, variance
 
-A = Points(2, 1)
-print("Example: 2D", A)
-A_sum = A.r_vector()
-print("With magnitude", A_sum)
-A_within = A.box_location()
-print(A_within)
+#def normal(sigma, x, x_o):
+#    """
+#    
+#    """
+#    return 1/(sigma*math.sqrt(2*math.pi)) * math.exp(-(np.abs(x - x_o))**2/(2*(sigma)**2))
 
-B = Points(3, 1)
-print("Example: 3D", B)
-B_sum = B.r_vector()
-print("With magnitude", B_sum)
+A = Points(2, 1000)
+A_Monte = A.MonteCarlo(A.box_location, -1, 1)
+print(A)
+print(f"Average = {A_Monte[0]:.4f}", f"Integral = {A_Monte[1]:.4f}",
+f"Variance = {A_Monte[2]:.4f}")
 
-C = Points(2, 1000)
-print("Example: 5 2D",C)
-C_sum = C.r_vector()
-print("With magnitudes", C_sum)
-C_within = C.box_location()
-print(C_within)
+
