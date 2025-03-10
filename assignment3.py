@@ -20,17 +20,8 @@ class Points:
     def __init__(self, d, n):
         self.n = n
         self.d = d
-        j = 0
-        points = np.zeros((self.n, self.d))
-        while j < self.n:
-            i = 0
-            point = np.random.uniform(-1, 1, self.d)
-            point = point.reshape((1, self.d))
-            while i < self.d:
-                points[j][i] = point[0][i]
-                i = i + 1
-            j = j + 1
-        self.points = points
+        points = np.random.uniform(-1, 1, self.d*self.n)
+        self.points = points.reshape((self.n, self.d))
 
     def __str__(self):
         """
@@ -46,10 +37,7 @@ class Points:
         j = 0
         dim_sum = np.zeros((self.n, 1))
         while j < self.n:
-            i = 0
-            while i < self.d:
-                dim_sum[j][0] = dim_sum[j][0] + (self.points[j][i])**2
-                i = i + 1
+            dim_sum[j][0] = dim_sum[j][0] + np.sum(self.points[j]**2)
             j = j + 1
         return dim_sum
 
@@ -59,11 +47,11 @@ class Points:
         points hit if their magnitudes (or more accurately the square of their magnitudes) are one 
         or less.
         """
-        within = 0
+        within = np.zeros(self.n)
         j = 0
         while j < self.n:
             if self.r_vector()[j][0] <= 1:
-                within = within + 1
+                within[j] = within[j] + 1
             j = j + 1
         return within
 
@@ -120,24 +108,49 @@ class Gaussian:
     Finds the normal (gaussian) distribution across a range of values 'x', with a given offset
     'x_o' and distribtuion width 'sigma'
     """
-    def __init__(self, sigma, x, x_o, d):
+    def __init__(self, sigma, x_o, d, n):
         self.sigma = sigma
-        self.x = x
         self.x_o = x_o
         self.d = d
+        self.n = n
+        t = np.random.uniform(-1, 1, self.n*self.d)
+        x = np.zeros(self.n*self.d)
+        j = 0
+        while j < self.n*self.d:
+            x[j] = t[j]/(1 - t[j]**2)
+            j = j + 1
+        self.x = x
+        self.t = t
 
     def __str__(self):
         """
+        Confirms which function is being used.
+        """
+        return f"Normal distribution across 'x' with an offset 'x_o' and dist. width 'sigma'"
+
+    def normalisation(self):
+        """
+        Expresses the term multiplying the integrand after substitution from 'x' to 't'.
+        """
+        return (1 + self.t**2)/((1 - self.t**2)**2)
+
+    def normal(self):
+        """
         Returns the distribution.
         """
-        exponential = math.exp(-(np.abs(self.x - self.x_o))**2/(2*(self.sigma)**2))
-        normalisation = 1/(self.sigma * math.sqrt(2*math.pi))
-        return normalisation * exponential
+        j = 0
+        exponential = np.zeros(self.d*self.n)
+        while j < self.d*self.n:
+            exponential[j]= math.exp(-(np.abs(self.x[j]- self.x_o))**2/(2*(self.sigma)**2))
+            j = j + 1
+        term = 1/(self.sigma * math.sqrt(2*math.pi))
+        return term * exponential
 
-# need to rewrite the normal function so it can be integrated over all space
-# (look at function given on handout)
-
-# also rewrite in multiple dimensions (by changing x and x_o to r and r_o)
+    def integrand(self):
+        """
+        Rewrites the gaussian function in terms of 't' (integration by substitution).
+        """
+        return self.normal() * self.normalisation()**self.d
 
 A = Points(2, 1000)
 A_Monte = MonteCarlo(A.box_location, 0, 1, 1000)
@@ -146,4 +159,8 @@ print(A)
 print(f"Average = {A_Calc[0]:.4f}", f"Integral = {A_Calc[1]:.4f}",
 f"Variance = {A_Calc[2]:.4f}")
 
-
+B = Gaussian(1, 0, 1, 10000)
+B_Monte = MonteCarlo(B.integrand, -1, 1, 10000)
+B_Calc = B_Monte.calculations()
+print(f"Average = {B_Calc[0]:.4f}", f"Integral = {B_Calc[1]:.4f}",
+f"Variance = {B_Calc[2]:.4f}")
