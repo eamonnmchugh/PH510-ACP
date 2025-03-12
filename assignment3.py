@@ -1,17 +1,21 @@
 #!/usr/bin/env python3
 
 """
-This program makes use of object classes to define d-dimensional points with dimensional components
-between the values of -1 and 1 (essentially choosing random points within a box of side length 2,
-centred at the origin). From this, the magnitude of the d-dimensional vector can be found to 
-determine whether or not the point lies within a d-dimensional ball (circle, sphere, etc.).
+This program makes use Monte Carlo simulations to find the estimate for a given function. This is 
+done by finding the average value of the function across a specified range. This expectation value
+is then multiplied by the range, which estimates a value for the integration of the function.
+Finally, the function's variance can be found to obtain the error.
+
+The two functions the Monte Carlo was used for were the classes 'Points' and 'Gaussian'. 'Points'
+finds the region of a d-dimensional ball by finding the location of 'n' random points (with unitary
+dimensions) and calculating the fraction of points found 'within' the ball. 'Gaussian' expresses 
+the d-dimensional normal distribution with a given offset 'x_o' and dist. width 'sigma'.
 """
 
 import math
 import numpy as np
 
-# ------------------------------------------------------------------------------------------------
-
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class Points:
     """
     Generates 'n' random points within a box of 'd' dimensions with constituent coord values
@@ -55,6 +59,7 @@ class Points:
             j = j + 1
         return within
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class MonteCarlo:
     """
     Approximates a given function by finding the expected value (average), then integrates this
@@ -103,6 +108,7 @@ class MonteCarlo:
         """
         return self.average()[0], self.integral(), self.variance()
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class Gaussian:
     """
     Finds the normal (gaussian) distribution across a range of values 'x', with a given offset
@@ -110,38 +116,35 @@ class Gaussian:
     """
     def __init__(self, sigma, x_o, d, n):
         self.sigma = sigma
-        self.x_o = x_o
         self.d = d
         self.n = n
         t = np.random.uniform(-1, 1, self.n*self.d)
-        x = np.zeros(self.n*self.d)
-        j = 0
-        while j < self.n*self.d:
-            x[j] = t[j]/(1 - t[j]**2)
-            j = j + 1
-        self.x = x
-        self.t = t
+        x = t/(1 - t**2)
+        self.x = x.reshape((self.n, self.d))
+        self.t = t.reshape((self.n, self.d))
+        self.x_o = x_o
 
     def __str__(self):
         """
         Confirms which function is being used.
         """
-        return f"Normal distribution across 'x' with an offset 'x_o' and dist. width 'sigma'"
+        return f"Normal distribution across 'x' with an offset {self.x_o} and dist. width",
+        "{self.sigma}"
 
-    def normalisation(self):
+    def normalisation(self, t_val):
         """
         Expresses the term multiplying the integrand after substitution from 'x' to 't'.
         """
-        return (1 + self.t**2)/((1 - self.t**2)**2)
+        return (1 + t_val**2)/((1 - t_val**2)**2)
 
     def normal(self):
         """
         Returns the distribution.
         """
         j = 0
-        exponential = np.zeros(self.d*self.n)
-        while j < self.d*self.n:
-            exponential[j]= math.exp(-(np.abs(self.x[j]- self.x_o))**2/(2*(self.sigma)**2))
+        exponential = np.zeros((self.n, 1))
+        while j < self.n:
+            exponential[j] = math.exp(-(np.sum((self.x[j] - self.x_o)**2/(2*(self.sigma)**2))))
             j = j + 1
         term = 1/(self.sigma * math.sqrt(2*math.pi))
         return term * exponential
@@ -150,17 +153,65 @@ class Gaussian:
         """
         Rewrites the gaussian function in terms of 't' (integration by substitution).
         """
-        return self.normal() * self.normalisation()**self.d
+        j = 0
+        norm = np.zeros((self.n, 1))
+        while j < self.n:
+            norm[j][0] = norm[j][0] + np.prod(self.normalisation(self.t[j]))
+            j = j + 1
+        return self.normal() * norm * 2**(self.d - 1)
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 A = Points(2, 1000)
 A_Monte = MonteCarlo(A.box_location, 0, 1, 1000)
 A_Calc = A_Monte.calculations()
-print(A)
+print(f"Region of a 2D ball:")
 print(f"Average = {A_Calc[0]:.4f}", f"Integral = {A_Calc[1]:.4f}",
 f"Variance = {A_Calc[2]:.4f}")
+print(f"Therefore, a 2D ball has a region of {A_Calc[1]:.4f} ± {np.sqrt(A_Calc[2]):.4f}",
+      f"units^{A.d}")
+print()
+
+A = Points(3, 1000)
+A_Monte = MonteCarlo(A.box_location, 0, 1, 1000)
+A_Calc = A_Monte.calculations()
+print(f"Region of a 3D ball:")
+print(f"Average = {A_Calc[0]:.4f}", f"Integral = {A_Calc[1]:.4f}",
+f"Variance = {A_Calc[2]:.4f}")
+print(f"Therefore, a 3D ball has a region of {A_Calc[1]:.4f} ± {np.sqrt(A_Calc[2]):.4f}",
+      f"units^{A.d}")
+print()
+
+A = Points(4, 1000)
+A_Monte = MonteCarlo(A.box_location, 0, 1, 1000)
+A_Calc = A_Monte.calculations()
+print(f"Region of a 4D ball:")
+print(f"Average = {A_Calc[0]:.4f}", f"Integral = {A_Calc[1]:.4f}",
+f"Variance = {A_Calc[2]:.4f}")
+print(f"Therefore, a 4D ball has a region of {A_Calc[1]:.4f} ± {np.sqrt(A_Calc[2]):.4f}",
+      f"units^{A.d}")
+print()
+
+A = Points(5, 1000)
+A_Monte = MonteCarlo(A.box_location, 0, 1, 1000)
+A_Calc = A_Monte.calculations()
+print(f"Region of a 5D ball:")
+print(f"Average = {A_Calc[0]:.4f}", f"Integral = {A_Calc[1]:.4f}",
+f"Variance = {A_Calc[2]:.4f}")
+print(f"Therefore, a 5D ball has a region of {A_Calc[1]:.4f} ± {np.sqrt(A_Calc[2]):.4f}",
+      f"units^{A.d}")
+print()
+
 
 B = Gaussian(1, 0, 1, 10000)
 B_Monte = MonteCarlo(B.integrand, -1, 1, 10000)
 B_Calc = B_Monte.calculations()
+print(f"For the 1D gaussian distribution, with an offset {B.x_o} and dist. width {B.sigma}")
+print(f"Average = {B_Calc[0]:.4f}", f"Integral = {B_Calc[1]:.4f}",
+f"Variance = {B_Calc[2]:.4f}")
+
+B = Gaussian(1, 0, 6, 10000)
+B_Monte = MonteCarlo(B.integrand, -1, 1, 10000)
+B_Calc = B_Monte.calculations()
+print(f"For the 6D gaussian distribution, with an offset {B.x_o} and dist. width {B.sigma}")
 print(f"Average = {B_Calc[0]:.4f}", f"Integral = {B_Calc[1]:.4f}",
 f"Variance = {B_Calc[2]:.4f}")
