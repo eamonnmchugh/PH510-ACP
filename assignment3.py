@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/bin/python3
 
 """
 This program makes use Monte Carlo simulations to find the estimate for a given function. This is 
@@ -13,7 +13,9 @@ the d-dimensional normal distribution with a given offset 'x_o' and dist. width 
 """
 
 import math
+import time
 import numpy as np
+from mpi4py import MPI
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class Points:
@@ -36,27 +38,12 @@ class Points:
     def r_vector(self):
         """
         Calculates the square of the magnitude of the d-dimensional vectors by finding the sum of
-        the square of the points' coords
+        the square of the points' coords. Then finds out how many of the random points fall within
+        the dimensions of the ball (hit). The points hit if their magnitudes (or more accurately
+        the square of their magnitudes) are one or less.
         """
-        j = 0
-        dim_sum = np.zeros((self.n, 1))
-        while j < self.n:
-            dim_sum[j][0] = dim_sum[j][0] + np.sum(self.points[j]**2)
-            j = j + 1
-        return dim_sum
-
-    def box_location(self):
-        """
-        Calculates how many of the random points fall within the dimensions of the ball (hit). The
-        points hit if their magnitudes (or more accurately the square of their magnitudes) are one 
-        or less.
-        """
-        within = np.zeros(self.n)
-        j = 0
-        while j < self.n:
-            if self.r_vector()[j][0] <= 1:
-                within[j] = within[j] + 1
-            j = j + 1
+        dim_sum = np.sum(self.points**2, axis=1)
+        within = (dim_sum <= 1).astype(int)
         return within
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -66,10 +53,10 @@ class MonteCarlo:
     average across the limits of the function 'a' and 'b'. Finally, the function's variance (error)
     is found.
     """
-    def __init__(self, function, a, b, n):
+    def __init__(self, class_used, function, a, b):
         self.a = a
         self.b = b
-        self.n = n
+        self.class_used = class_used
         self.function = function
         self.value = function()
 
@@ -81,32 +68,39 @@ class MonteCarlo:
 
     def average(self):
         """
-        Calculates the average value of a given function.
+        Calculates the average value of a given function, <f> = 1/n * Σn (f(n)).
         """
-        value_2 = self.value**2
-        average = 1/self.n * np.sum(self.value)
-        average_2 = 1/self.n * np.sum(value_2)
+        value_2 = np.square(self.value)
+        average = 1/self.class_used.n * np.sum(self.value)
+        average_2 = 1/self.class_used.n * np.sum(value_2)
         return average, average_2
 
-    def integral(self):
+    def parallelisation(self):
         """
-        Calculates the integral of a given function  between limits 'a' and 'b'.   
+        Sums up the averages (and square of the averages) of the given function using the MPI 
+        "reduce" command, bringing them into the first processor "rank 0". Using these the
+        integral of the given function between limits 'a' and 'b', I = (b - a)<f> were found, as
+        well as the variance (error), σ^2 = 1/n * (<f^2> <f>^2)
         """
-        integral = (self.b - self.a) * self.average()[0]
-        return integral
+        val_mean = comm.reduce(self.average()[0], op=MPI.SUM, root=0)
+        val_square_mean = comm.reduce(self.average()[1], op=MPI.SUM, root=0)
 
-    def variance(self):
-        """
-        Calculates the variance (error) of a given function.
-        """
-        variance = 1/self.n * (self.average()[1] - self.average()[0]**2)
-        return variance
+        if rank==0:
+            integral_term = (self.b - self.a)**self.class_used.d
+            integral = (val_mean)*integral_term/no_of_ranks
 
-    def calculations(self):
-        """
-        Returns all three desired values at once.
-        """
-        return self.average()[0], self.integral(), self.variance()
+            variance_1 = 1/no_of_ranks * val_square_mean
+            variance_2 = (1/no_of_ranks * val_mean)**2
+
+            variance = 1/self.class_used.n * (variance_1 - variance_2)
+            uncertainty = math.sqrt(variance) * integral_term
+            print(f"Average = {self.average()[0]}, Integral = {integral},",
+            f"Variance = {variance}")
+            print(f"Therefore, the integral is {integral:.4f} ± {uncertainty:.4f}",
+            f"units^{self.class_used.d}")
+            print()
+            return integral, uncertainty
+        return None
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class Gaussian:
@@ -126,10 +120,9 @@ class Gaussian:
 
     def __str__(self):
         """
-        Confirms which function is being used.
+        Confirms which function is being used, printing the values for the offset and dist. width.
         """
-        return f"Normal distribution across 'x' with an offset {self.x_o} and dist. width",
-        "{self.sigma}"
+        return f"Normal distribution across 'x' with offset {self.x_o} and dist width {self.sigma}"
 
     def normalisation(self, t_val):
         """
@@ -137,81 +130,73 @@ class Gaussian:
         """
         return (1 + t_val**2)/((1 - t_val**2)**2)
 
-    def normal(self):
-        """
-        Returns the distribution.
-        """
-        j = 0
-        exponential = np.zeros((self.n, 1))
-        while j < self.n:
-            exponential[j] = math.exp(-(np.sum((self.x[j] - self.x_o)**2/(2*(self.sigma)**2))))
-            j = j + 1
-        term = 1/(self.sigma * math.sqrt(2*math.pi))
-        return term * exponential
-
     def integrand(self):
         """
-        Rewrites the gaussian function in terms of 't' (integration by substitution).
+        Returns the distribution by rewriting the gaussian function in terms of 't' (integration 
+        by substitution).
         """
-        j = 0
-        norm = np.zeros((self.n, 1))
-        while j < self.n:
-            norm[j][0] = norm[j][0] + np.prod(self.normalisation(self.t[j]))
-            j = j + 1
-        return self.normal() * norm * 2**(self.d - 1)
+        exponential = np.exp(np.sum(-(self.x - self.x_o)**2, axis=1) /(2*(self.sigma)**2))
+        norm = np.prod(self.normalisation(self.t), axis=1)
+        term = 1/(self.sigma * math.sqrt(2*math.pi))
+        return term * exponential * norm
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-A = Points(2, 1000)
-A_Monte = MonteCarlo(A.box_location, 0, 1, 1000)
-A_Calc = A_Monte.calculations()
-print(f"Region of a 2D ball:")
-print(f"Average = {A_Calc[0]:.4f}", f"Integral = {A_Calc[1]:.4f}",
-f"Variance = {A_Calc[2]:.4f}")
-print(f"Therefore, a 2D ball has a region of {A_Calc[1]:.4f} ± {np.sqrt(A_Calc[2]):.4f}",
-      f"units^{A.d}")
-print()
+comm = MPI.COMM_WORLD
+no_of_ranks = comm.Get_size()
+rank = comm.Get_rank()
 
-A = Points(3, 1000)
-A_Monte = MonteCarlo(A.box_location, 0, 1, 1000)
-A_Calc = A_Monte.calculations()
-print(f"Region of a 3D ball:")
-print(f"Average = {A_Calc[0]:.4f}", f"Integral = {A_Calc[1]:.4f}",
-f"Variance = {A_Calc[2]:.4f}")
-print(f"Therefore, a 3D ball has a region of {A_Calc[1]:.4f} ± {np.sqrt(A_Calc[2]):.4f}",
-      f"units^{A.d}")
-print()
+if rank==0:
+    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+    print(f"{no_of_ranks} Processors:")
+    print()
+    start_time = time.time()
 
-A = Points(4, 1000)
-A_Monte = MonteCarlo(A.box_location, 0, 1, 1000)
-A_Calc = A_Monte.calculations()
-print(f"Region of a 4D ball:")
-print(f"Average = {A_Calc[0]:.4f}", f"Integral = {A_Calc[1]:.4f}",
-f"Variance = {A_Calc[2]:.4f}")
-print(f"Therefore, a 4D ball has a region of {A_Calc[1]:.4f} ± {np.sqrt(A_Calc[2]):.4f}",
-      f"units^{A.d}")
-print()
+no_of_samples = np.int32(100000000/no_of_ranks)
 
-A = Points(5, 1000)
-A_Monte = MonteCarlo(A.box_location, 0, 1, 1000)
-A_Calc = A_Monte.calculations()
-print(f"Region of a 5D ball:")
-print(f"Average = {A_Calc[0]:.4f}", f"Integral = {A_Calc[1]:.4f}",
-f"Variance = {A_Calc[2]:.4f}")
-print(f"Therefore, a 5D ball has a region of {A_Calc[1]:.4f} ± {np.sqrt(A_Calc[2]):.4f}",
-      f"units^{A.d}")
-print()
+if rank==0:
+    print("Region of a unitary 2D ball:")
 
+A = Points(2, no_of_samples)
+A_MONTE = MonteCarlo(A, A.r_vector, 0, 1)
+A_CALC = A_MONTE.parallelisation()
 
-B = Gaussian(1, 0, 1, 10000)
-B_Monte = MonteCarlo(B.integrand, -1, 1, 10000)
-B_Calc = B_Monte.calculations()
-print(f"For the 1D gaussian distribution, with an offset {B.x_o} and dist. width {B.sigma}")
-print(f"Average = {B_Calc[0]:.4f}", f"Integral = {B_Calc[1]:.4f}",
-f"Variance = {B_Calc[2]:.4f}")
+if rank==0:
+    print("Region of a unitary 3D ball:")
 
-B = Gaussian(1, 0, 6, 10000)
-B_Monte = MonteCarlo(B.integrand, -1, 1, 10000)
-B_Calc = B_Monte.calculations()
-print(f"For the 6D gaussian distribution, with an offset {B.x_o} and dist. width {B.sigma}")
-print(f"Average = {B_Calc[0]:.4f}", f"Integral = {B_Calc[1]:.4f}",
-f"Variance = {B_Calc[2]:.4f}")
+B = Points(3, no_of_samples)
+B_MONTE = MonteCarlo(B, B.r_vector, 0, 1)
+B_CALC = B_MONTE.parallelisation()
+
+if rank==0:
+    print("Region of a unitary 4D ball:")
+
+C = Points(4, no_of_samples)
+C_MONTE = MonteCarlo(C, C.r_vector, 0, 1)
+C_CALC = C_MONTE.parallelisation()
+
+if rank==0:
+    print("Region of a unitary 5D ball:")
+
+D = Points(5, no_of_samples)
+D_MONTE = MonteCarlo(D, D.r_vector, 0, 1)
+D_CALC = D_MONTE.parallelisation()
+
+if rank==0:
+    print("Gaussian Dist. in 1D with offset x_o and dist. width sigma:")
+
+E = Gaussian(1, 0, 1, no_of_samples)
+E_MONTE = MonteCarlo(E, E.integrand, -1, 1)
+E_CALC = E_MONTE.parallelisation()
+
+if rank==0:
+    print("Gaussian Dist. in 6D with offset x_o and dist. width sigma:")
+
+F = Gaussian(1, 0, 6, no_of_samples)
+F_MONTE = MonteCarlo(F, F.integrand, -1, 1)
+F_CALC = F_MONTE.parallelisation()
+
+if rank==0:
+    end_time = time.time()
+    execution_time = end_time - start_time
+    print(f"The code took {execution_time} seconds to run for {no_of_ranks} processors")
+    print()
