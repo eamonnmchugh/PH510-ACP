@@ -80,7 +80,7 @@ class MonteCarlo:
         Sums up the averages (and square of the averages) of the given function using the MPI 
         "reduce" command, bringing them into the first processor "rank 0". Using these the
         integral of the given function between limits 'a' and 'b', I = (b - a)<f> were found, as
-        well as the variance (error), σ^2 = 1/n * (<f^2> <f>^2)
+        well as the variance (error), σ^2 = 1/n * (<f^2> - <f>^2)
         """
         val_mean = comm.reduce(self.average()[0], op=MPI.SUM, root=0)
         val_square_mean = comm.reduce(self.average()[1], op=MPI.SUM, root=0)
@@ -108,21 +108,21 @@ class Gaussian:
     Finds the normal (gaussian) distribution across a range of values 'x', with a given offset
     'x_o' and distribtuion width 'sigma'
     """
-    def __init__(self, sigma, x_o, d, n):
+    def __init__(self, sigma, x_o, n):
         self.sigma = sigma
-        self.d = d
+        self.x_o = x_o
+        self.d = len(x_o)
         self.n = n
         t = np.random.uniform(-1, 1, self.n*self.d)
         x = t/(1 - t**2)
         self.x = x.reshape((self.n, self.d))
         self.t = t.reshape((self.n, self.d))
-        self.x_o = x_o
 
     def __str__(self):
         """
         Confirms which function is being used, printing the values for the offset and dist. width.
         """
-        return f"Normal distribution across 'x' with offset {self.x_o} and dist width {self.sigma}"
+        return f"Normal distribution with an offset {self.x_o} and dist. width {self.sigma}"
 
     def normalisation(self, t_val):
         """
@@ -135,7 +135,7 @@ class Gaussian:
         Returns the distribution by rewriting the gaussian function in terms of 't' (integration 
         by substitution).
         """
-        exponential = np.exp(np.sum(-(self.x - self.x_o)**2, axis=1) /(2*(self.sigma)**2))
+        exponential = np.exp(np.sum(-(self.x - self.x_o)**2, axis=1)/(2*(self.sigma)**2))
         norm = np.prod(self.normalisation(self.t), axis=1)
         term = 1/(self.sigma * math.sqrt(2*math.pi))
         return term * exponential * norm
@@ -157,43 +157,65 @@ if rank==0:
     print("Region of a unitary 2D ball:")
 
 A = Points(2, no_of_samples)
-A_MONTE = MonteCarlo(A, A.r_vector, 0, 1)
+A_MONTE = MonteCarlo(A, A.r_vector, -1, 1)
 A_CALC = A_MONTE.parallelisation()
 
 if rank==0:
     print("Region of a unitary 3D ball:")
 
 B = Points(3, no_of_samples)
-B_MONTE = MonteCarlo(B, B.r_vector, 0, 1)
+B_MONTE = MonteCarlo(B, B.r_vector, -1, 1)
 B_CALC = B_MONTE.parallelisation()
 
 if rank==0:
     print("Region of a unitary 4D ball:")
 
 C = Points(4, no_of_samples)
-C_MONTE = MonteCarlo(C, C.r_vector, 0, 1)
+C_MONTE = MonteCarlo(C, C.r_vector, -1, 1)
 C_CALC = C_MONTE.parallelisation()
 
 if rank==0:
     print("Region of a unitary 5D ball:")
 
 D = Points(5, no_of_samples)
-D_MONTE = MonteCarlo(D, D.r_vector, 0, 1)
+D_MONTE = MonteCarlo(D, D.r_vector, -1, 1)
 D_CALC = D_MONTE.parallelisation()
 
+E = Gaussian(1, np.zeros(1), no_of_samples)
 if rank==0:
-    print("Gaussian Dist. in 1D with offset x_o and dist. width sigma:")
-
-E = Gaussian(1, 0, 1, no_of_samples)
+    print(f"Gaussian Dist. in {E.d}D with offset r_o = {E.x_o} and dist. width σ = {E.sigma}:")
 E_MONTE = MonteCarlo(E, E.integrand, -1, 1)
 E_CALC = E_MONTE.parallelisation()
 
+F = Gaussian(1, np.zeros(6), no_of_samples)
 if rank==0:
-    print("Gaussian Dist. in 6D with offset x_o and dist. width sigma:")
-
-F = Gaussian(1, 0, 6, no_of_samples)
+    print(f"Gaussian Dist. in {F.d}D with offset r_o = {F.x_o} and dist. width σ = {F.sigma}:")
 F_MONTE = MonteCarlo(F, F.integrand, -1, 1)
 F_CALC = F_MONTE.parallelisation()
+
+G = Gaussian(4, np.zeros(1), no_of_samples)
+if rank==0:
+    print(f"Gaussian Dist. in {G.d}D with offset r_o = {G.x_o} and dist. width σ = {G.sigma}:")
+G_MONTE = MonteCarlo(G, G.integrand, -1, 1)
+G_CALC = G_MONTE.parallelisation()
+
+H = Gaussian(4, np.ones(6), no_of_samples)
+if rank==0:
+    print(f"Gaussian Dist. in {H.d}D with offset r_o = {H.x_o} and dist. width σ = {H.sigma}:")
+H_MONTE = MonteCarlo(H, H.integrand, -1, 1)
+H_CALC = H_MONTE.parallelisation()
+
+I = Gaussian(2, np.array( [2, 5, 8, 3, 11, 2] ), no_of_samples)
+if rank==0:
+    print(f"Gaussian Dist. in {I.d}D with offset r_o = {I.x_o} and dist. width σ = {I.sigma}:")
+I_MONTE = MonteCarlo(I, I.integrand, -1, 1)
+I_CALC = I_MONTE.parallelisation()
+
+#J = Gaussian(2, np.array( [2, 5, 8, 3, 11, 2] ), no_of_samples)
+#if rank==0:
+#    print(f"Gaussian Dist. in {J.d}D with offset r_o = {J.x_o} and dist. width σ = {J.sigma}:")
+#J_MONTE = MonteCarlo(J, J.integrand, -1, 1)
+#J_CALC = J_MONTE.parallelisation()
 
 if rank==0:
     end_time = time.time()
