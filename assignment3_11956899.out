@@ -1,0 +1,231 @@
+===================================================================================
+SLURM Job ID:            11956899
+Submit time:             Thu Mar 27 12:04:56 GMT 2025 (Unix Epoch time: 1743077096)
+Start time:              Thu Mar 27 12:05:20 GMT 2025 (Unix Epoch time: 1743077120)
+No. nodes:               1
+No. tasks:               16
+Job name:                assignment3
+Account:                 teaching
+QoS:                     teaching
+Partition (queue):       teaching
+Submit directory:        /users/cgb20140/Documents/PH510/Assignment_3
+Script name:             /users/cgb20140/Documents/PH510/Assignment_3/Assignment3.sh
+Master node:             wee12
+Nodes used:              wee12
+Task distribution:       
+===================================================================================
+
+
+-------------------------------------------------------------------
+Your code has been rated at 10.00/10 (previous run: 9.85/10, +0.15)
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1 Processors:
+
+Region of a unitary 2D ball:
+Average = 0.78532731, Integral = 3.14130924, Variance = 1.6858832616816388e-09
+Therefore, the integral is 3.1413 ± 0.0002 units^2
+
+Region of a unitary 3D ball:
+Average = 0.52362739, Integral = 4.18901912, Variance = 2.494417464417879e-09
+Therefore, the integral is 4.1890 ± 0.0004 units^3
+
+Region of a unitary 4D ball:
+Average = 0.30834885, Integral = 4.9335816, Variance = 2.132698367036775e-09
+Therefore, the integral is 4.9336 ± 0.0007 units^4
+
+Region of a unitary 5D ball:
+Average = 0.16450006, Integral = 5.26400192, Variance = 1.374397902599964e-09
+Therefore, the integral is 5.2640 ± 0.0012 units^5
+
+Gaussian Dist. in 1D with offset r_o = [0.] and dist. width σ = 1:
+Average = 0.5000085271659919, Integral = 1.0000170543319837, Variance = 7.472882258318304e-10
+Therefore, the integral is 1.0000 ± 0.0001 units^1
+
+Gaussian Dist. in 6D with offset r_o = [0. 0. 0. 0. 0. 0.] and dist. width σ = 1:
+Average = 1.546423694919471, Integral = 98.97111647484614, Variance = 9.092510284385047e-08
+Therefore, the integral is 98.9711 ± 0.0193 units^6
+
+Gaussian Dist. in 1D with offset r_o = [0.] and dist. width σ = 4:
+Average = 0.4998798207547028, Integral = 0.9997596415094055, Variance = 4.149453182598407e-09
+Therefore, the integral is 0.9998 ± 0.0001 units^1
+
+Gaussian Dist. in 6D with offset r_o = [1. 1. 1. 1. 1. 1.] and dist. width σ = 4:
+Average = 1584.0300802079325, Integral = 101377.92513330768, Variance = 15.9774732082273
+Therefore, the integral is 101377.9251 ± 255.8197 units^6
+
+Gaussian Dist. in 6D with offset r_o = [ 2  5  8  3 11  2] and dist. width σ = 2:
+Average = 43.100436822689275, Integral = 2758.4279566521136, Variance = 26.654136120089184
+Therefore, the integral is 2758.4280 ± 330.4169 units^6
+
+The code took 191.9878556728363 seconds to run for 1 processors
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2 Processors:
+
+Region of a unitary 2D ball:
+Average = 0.7853557, Integral = 3.1414894799999997, Variance = 3.3712522088116637e-09
+Therefore, the integral is 3.1415 ± 0.0002 units^2
+
+Region of a unitary 3D ball:
+Average = 0.52354798, Integral = 4.18869632, Variance = 4.988873030880768e-09
+Therefore, the integral is 4.1887 ± 0.0006 units^3
+
+Region of a unitary 4D ball:
+Average = 0.30842048, Integral = 4.934493440000001, Variance = 4.265833557077888e-09
+Therefore, the integral is 4.9345 ± 0.0010 units^4
+
+Region of a unitary 5D ball:
+Average = 0.16449896, Integral = 5.263835520000001, Variance = 2.748726020671608e-09
+Therefore, the integral is 5.2638 ± 0.0017 units^5
+
+Gaussian Dist. in 1D with offset r_o = [0.] and dist. width σ = 1:
+Average = 0.4999728479825683, Integral = 1.0000232227841512, Variance = 1.494572780339075e-09
+Therefore, the integral is 1.0000 ± 0.0001 units^1
+
+Gaussian Dist. in 6D with offset r_o = [0. 0. 0. 0. 0. 0.] and dist. width σ = 1:
+Average = 1.5462386663652978, Integral = 98.97608751800652, Variance = 1.8184086244235792e-07
+Therefore, the integral is 98.9761 ± 0.0273 units^6
+
+Gaussian Dist. in 1D with offset r_o = [0.] and dist. width σ = 4:
+Average = 0.5000836977724736, Integral = 1.0000096280164497, Variance = 8.301546397161065e-09
+Therefore, the integral is 1.0000 ± 0.0002 units^1
+
+Gaussian Dist. in 6D with offset r_o = [1. 1. 1. 1. 1. 1.] and dist. width σ = 4:
+Average = 1579.6334756764338, Integral = 100958.57508849846, Variance = 32.866827958578675
+Therefore, the integral is 100958.5751 ± 366.9094 units^6
+
+Gaussian Dist. in 6D with offset r_o = [ 2  5  8  3 11  2] and dist. width σ = 2:
+Average = 48.61200933020314, Integral = 2598.9367331665935, Variance = 57.28926260198995
+Therefore, the integral is 2598.9367 ± 484.4139 units^6
+
+The code took 80.6743414402008 seconds to run for 2 processors
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+4 Processors:
+
+Region of a unitary 2D ball:
+Average = 0.7853446000000001, Integral = 3.14148148, Variance = 6.7425500770425245e-09
+Therefore, the integral is 3.1415 ± 0.0003 units^2
+
+Region of a unitary 3D ball:
+Average = 0.52369, Integral = 4.18823232, Variance = 9.977855371067137e-09
+Therefore, the integral is 4.1882 ± 0.0008 units^3
+
+Region of a unitary 4D ball:
+Average = 0.30837716, Integral = 4.93484368, Variance = 8.532002614681884e-09
+Therefore, the integral is 4.9348 ± 0.0015 units^4
+
+Region of a unitary 5D ball:
+Average = 0.1646598, Integral = 5.26540352, Variance = 5.498767125452015e-09
+Therefore, the integral is 5.2654 ± 0.0024 units^5
+
+Gaussian Dist. in 1D with offset r_o = [0.] and dist. width σ = 1:
+Average = 0.5001560725298917, Integral = 1.0000272365826006, Variance = 2.988741223154876e-09
+Therefore, the integral is 1.0000 ± 0.0001 units^1
+
+Gaussian Dist. in 6D with offset r_o = [0. 0. 0. 0. 0. 0.] and dist. width σ = 1:
+Average = 1.5461824923297645, Integral = 98.92857240697845, Variance = 3.6354458695800527e-07
+Therefore, the integral is 98.9286 ± 0.0386 units^6
+
+Gaussian Dist. in 1D with offset r_o = [0.] and dist. width σ = 4:
+Average = 0.5001426482259339, Integral = 1.0000420585340868, Variance = 1.660830653378467e-08
+Therefore, the integral is 1.0000 ± 0.0003 units^1
+
+Gaussian Dist. in 6D with offset r_o = [1. 1. 1. 1. 1. 1.] and dist. width σ = 4:
+Average = 1568.9920148357714, Integral = 100896.52290390612, Variance = 63.643400315432466
+Therefore, the integral is 100896.5229 ± 510.5716 units^6
+
+Gaussian Dist. in 6D with offset r_o = [ 2  5  8  3 11  2] and dist. width σ = 2:
+Average = 87.38784780313838, Integral = 3208.933799005915, Variance = 520.2836273810401
+Therefore, the integral is 3208.9338 ± 1459.8225 units^6
+
+The code took 41.39071464538574 seconds to run for 4 processors
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+8 Processors:
+
+Region of a unitary 2D ball:
+Average = 0.78536016, Integral = 3.14157432, Variance = 1.3484040359582688e-08
+Therefore, the integral is 3.1416 ± 0.0005 units^2
+
+Region of a unitary 3D ball:
+Average = 0.52365936, Integral = 4.18883384, Variance = 1.9955427226088568e-08
+Therefore, the integral is 4.1888 ± 0.0011 units^3
+
+Region of a unitary 4D ball:
+Average = 0.30840728, Integral = 4.935509120000001, Variance = 1.706527988949901e-08
+Therefore, the integral is 4.9355 ± 0.0021 units^4
+
+Region of a unitary 5D ball:
+Average = 0.16447432, Integral = 5.264032, Variance = 1.099523367992e-08
+Therefore, the integral is 5.2640 ± 0.0034 units^5
+
+Gaussian Dist. in 1D with offset r_o = [0.] and dist. width σ = 1:
+Average = 0.500030307321565, Integral = 1.0000307224009168, Variance = 5.977600851083915e-09
+Therefore, the integral is 1.0000 ± 0.0002 units^1
+
+Gaussian Dist. in 6D with offset r_o = [0. 0. 0. 0. 0. 0.] and dist. width σ = 1:
+Average = 1.545834037605238, Integral = 98.93413828721633, Variance = 7.272923758157459e-07
+Therefore, the integral is 98.9341 ± 0.0546 units^6
+
+Gaussian Dist. in 1D with offset r_o = [0.] and dist. width σ = 4:
+Average = 0.49989768902393744, Integral = 0.9999659675775819, Variance = 3.3209926449364055e-08
+Therefore, the integral is 1.0000 ± 0.0004 units^1
+
+Gaussian Dist. in 6D with offset r_o = [1. 1. 1. 1. 1. 1.] and dist. width σ = 4:
+Average = 1574.936582813281, Integral = 100868.30928612259, Variance = 116.3515908220924
+Therefore, the integral is 100868.3093 ± 690.3449 units^6
+
+Gaussian Dist. in 6D with offset r_o = [ 2  5  8  3 11  2] and dist. width σ = 2:
+Average = 39.73520229529742, Integral = 3127.978079087975, Variance = 651.7649508193955
+Therefore, the integral is 3127.9781 ± 1633.9000 units^6
+
+The code took 21.158682823181152 seconds to run for 8 processors
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+16 Processors:
+
+Region of a unitary 2D ball:
+Average = 0.78533344, Integral = 3.14151412, Variance = 2.6969455138406247e-08
+Therefore, the integral is 3.1415 ± 0.0007 units^2
+
+Region of a unitary 3D ball:
+Average = 0.5234896, Integral = 4.1890012, Variance = 3.99106963659964e-08
+Therefore, the integral is 4.1890 ± 0.0016 units^3
+
+Region of a unitary 4D ball:
+Average = 0.30841040000000003, Integral = 4.935302399999999, Variance = 3.41297678878464e-08
+Therefore, the integral is 4.9353 ± 0.0030 units^4
+
+Region of a unitary 5D ball:
+Average = 0.16450816000000001, Integral = 5.26395808, Variance = 2.199021935812542e-08
+Therefore, the integral is 5.2640 ± 0.0047 units^5
+
+Gaussian Dist. in 1D with offset r_o = [0.] and dist. width σ = 1:
+Average = 0.49986450979653163, Integral = 0.9999187810039617, Variance = 1.1957427581372394e-08
+Therefore, the integral is 0.9999 ± 0.0002 units^1
+
+Gaussian Dist. in 6D with offset r_o = [0. 0. 0. 0. 0. 0.] and dist. width σ = 1:
+Average = 1.548309384017413, Integral = 98.95869028031021, Variance = 1.4554765197085887e-06
+Therefore, the integral is 98.9587 ± 0.0772 units^6
+
+Gaussian Dist. in 1D with offset r_o = [0.] and dist. width σ = 4:
+Average = 0.5000787524479885, Integral = 0.9998978716745024, Variance = 6.640105042835721e-08
+Therefore, the integral is 0.9999 ± 0.0005 units^1
+
+Gaussian Dist. in 6D with offset r_o = [1. 1. 1. 1. 1. 1.] and dist. width σ = 4:
+Average = 1598.8288084899655, Integral = 101646.44483979348, Variance = 297.3566942794592
+Therefore, the integral is 101646.4448 ± 1103.6181 units^6
+
+Gaussian Dist. in 6D with offset r_o = [ 2  5  8  3 11  2] and dist. width σ = 2:
+Average = 38.999301567640245, Integral = 3432.396479145467, Variance = 1526.4295761027633
+Therefore, the integral is 3432.3965 ± 2500.4511 units^6
+
+The code took 15.170872211456299 seconds to run for 16 processors
+
+===================================================================================
+SLURM job 11956899 ended:     Thu Mar 27 12:11:22 GMT 2025 (Unix Epoch time: 1743077482)
+This is an estimated end time using the 'date' command from node wee12.hpc.strath.ac.uk
+For accurate timings, use 'sacct -j 11956899 -X --format=Submit,Start,End,Elapsed'
+======================================================================================
