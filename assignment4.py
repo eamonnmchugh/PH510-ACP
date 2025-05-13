@@ -7,6 +7,7 @@ https://github.com/eamonnmchugh/PH510-ACP/blob/Assignment-4/MIT%20Licence
 
 import time
 import numpy as np
+import matplotlib.pyplot as plt
 #from mpi4py import MPI
 #from monte_carlo import MonteCarlo
 
@@ -33,7 +34,7 @@ start_time = time.time()
 
 
 class ChargeGridWithSmoothing:
-    def __init__(self, N, h, tolerance=1e-100, iterations=10000):
+    def __init__(self, N, h):
         """
         Initialize the charge grid with N x N points and spacing h.
 
@@ -47,7 +48,8 @@ class ChargeGridWithSmoothing:
         self.tolerance = tolerance
         self.max_iter = iterations
         # Initialize a charge grid with all zeros initially.
-        self.grid = np.zeros((N, N))
+        self.phi = np.zeros((N, N))
+        self.f = np.zeros((N, N))
         # To track fixed charge points (those set by the user)
         self.fixed_charges = set()
 
@@ -60,82 +62,96 @@ class ChargeGridWithSmoothing:
         :param charge: The charge to set at (x, y)
         """
         if 0 <= x < self.N and 0 <= y < self.N:
-            self.grid[x, y] = charge
+            self.phi[x, y] = charge
             self.fixed_charges.add((x, y))
         else:
             raise ValueError(f"Invalid coordinates: ({x}, {y}) outside grid bounds.")
 
-    def update_charges(self):
+    def set_boundary_conditions(self, bc_type):
         """
-        Update the charge at each point to be the average of its neighboring points.
-        Fixed charges (those set by the user) remain unchanged.
-        Boundary points (i.e., points where i=0 or i=N-1 or j=0 or j=N-1) 
-        will only average neighboring points within the grid.
+        Applying different preset boundary conditions
         """
-        new_grid = np.copy(self.grid)  # Copy the grid to avoid modifying during iteration
+        if bc_type == 'all_1V':
+            self.phi[0, :] = 1      # Top
+            self.phi[-1, :] = 1     # Bottom
+            self.phi[:, 0] = 1      # Left
+            self.phi[:, -1] = 1     # Right
+        elif bc_type == 'tb1_lr-1':
+            self.phi[0, :] = 1
+            self.phi[-1, :] = 1
+            self.phi[:, 0] = -1
+            self.phi[:, -1] = -1
+        elif bc_type == 'tl2_b0_r-4':
+            self.phi[0, :] = 2
+            self.phi[-1, :] = 0
+            self.phi[:, 0] = 2
+            self.phi[:, -1] = -4
+        else:
+            raise ValueError(f"Unknown boundary condition type: {bc_type}")
 
-        for i in range(self.N):
-            for j in range(self.N):
-                # Skip if the charge is fixed at this point
-                if (i, j) in self.fixed_charges:
-                    continue
+        # Add boundary points to fixed_potentials set
+        for i in range(self.n):
+            self.fixed_charges.add((self.n - 1, i))  # Top
+            self.fixed_charges.add((0, i))           # Bottom
+            self.fixed_charges.add((i, 0))           # Left
+            self.fixed_charges.add((i, self.n - 1))  # Right
 
-                # Collect the neighboring points within the grid for averaging
-                neighboring_charges = []
+        return self.phi
 
-                # Check if the neighbor (i+1, j) is within bounds
-                if i + 1 < self.N:
-                    neighboring_charges.append(self.grid[i+1, j])
-                
-                # Check if the neighbor (i-1, j) is within bounds
-                if i - 1 >= 0:
-                    neighboring_charges.append(self.grid[i-1, j])
-                
-                # Check if the neighbor (i, j+1) is within bounds
-                if j + 1 < self.N:
-                    neighboring_charges.append(self.grid[i, j+1])
-                
-                # Check if the neighbor (i, j-1) is within bounds
-                if j - 1 >= 0:
-                    neighboring_charges.append(self.grid[i, j-1])
-
-                # Calculate the average of valid neighboring charges
-                if neighboring_charges:
-                    new_grid[i, j] = np.mean(neighboring_charges)
-
-        # Update the grid with the new values
-        self.grid = new_grid
-
-    def run_until_equilibrium(self):
+    def relax(self, max_iter=10000, tol=1e-10):
         """
-        Run the charge update process iteratively until equilibrium is reached.
-        The process stops when the maximum change in charges between two consecutive iterations
-        is smaller than the specified tolerance, or the maximum number of iterations is reached.
+        Update the potential at each point to be the average of its neighboring points. Fixed
+        potentials (those set by the user) remain unchanged. Boundary points (i.e., points where
+        i=0 or i=N-1 or j=0 or j=N-1) will only average neighboring points within the grid. This is
+        run iteratively until equilibrium is reached. The process stops when the maximum change in
+        potentials between two consecutive iterations is smaller than the specified tolerance, or
+        when the maximum number of iterations is reached.
         """
-        iteration = 0
-        while iteration < self.max_iter:
-            iteration += 1
+        omega = 2/(1 + np.sin(np.pi/self.n))
+        new_phi = self.phi
+        for iteration in range(max_iter):
+            max_delta = 0
+            for i in range(0, self.n):
+                for j in range(0, self.n):
+                    if (i, j) in self.fixed_charges:
+                        continue
 
-            # Copy the current grid for comparison after update
-            old_grid = np.copy(self.grid)
+                    # Collect the neighboring points within the grid for averaging
+                    neighboring_charges = []
 
-            # Perform charge update
-            self.update_charges()
+                    # Check if the neighbor (i+1, j) is within bounds
+                    if i + 1 < self.n:
+                        neighboring_charges.append(self.phi[i+1, j])
 
-            # Calculate the maximum change between the old and new grid
-            max_change = np.max(np.abs(self.grid - old_grid))
+                    # Check if the neighbor (i-1, j) is within bounds
+                    if i - 1 >= 0:
+                        neighboring_charges.append(self.phi[i-1, j])
 
-            # If the maximum change is less than the tolerance, we're done
-            if max_change < self.tolerance:
-                print(f"Equilibrium reached after {iteration} iterations.")
+                    # Check if the neighbor (i, j+1) is within bounds
+                    if j + 1 < self.n:
+                        neighboring_charges.append(self.phi[i, j+1])
+
+                    # Check if the neighbor (i, j-1) is within bounds
+                    if j - 1 >= 0:
+                        neighboring_charges.append(self.phi[i, j-1])
+
+                    old_phi = self.phi[i, j]
+                    rhs = -(self.h**2 * self.f[i, j]) + np.mean(neighboring_charges)
+                    new_phi[i,j] = (omega * rhs) + ((1 - omega) * old_phi)
+                    max_delta = max(max_delta, abs(new_phi[i,j] - old_phi))
+            self.phi = new_phi
+            if max_delta < tol:
+                print(f"Converged in {iteration} iterations.")
+                print(np.round(self.phi, 2))
                 break
         else:
-            print(f"Maximum iterations ({self.max_iter}) reached without equilibrium.")
+            print(f"Maximum iterations ({max_iter}) reached without equilibrium.")
+        return self.phi
 
     def get_charge_at(self, x, y):
         """Get the charge at a specific grid point."""
         if 0 <= x < self.N and 0 <= y < self.N:
-            return self.grid[x, y]
+            return self.phi[x, y]
         else:
             raise ValueError("Invalid grid point.")
 
@@ -156,44 +172,33 @@ class ChargeGridWithSmoothing:
             raise ValueError(f"Invalid coordinates: ({x}, {y}) outside grid bounds.")
     
     def display_grid(self):
-        """Display the current charge grid."""
-        print(np.round(self.grid, 2))
+        """
+        Display the current charge grid.
+        """
+        print(np.round(self.phi, 2))
     
     def display_physical_positions(self):
-        """Display the grid's physical coordinates and their charges."""
+        """
+        Display the grid's physical coordinates and their charges.
+        """
         for x in range(self.N):
             for y in range(self.N):
                 x_coord, y_coord = self.get_physical_coordinates(x, y)
-                charge = self.grid[x, y]
+                charge = self.phi[x, y]
                 print(f"Position ({x_coord:.2f}, {y_coord:.2f})cm has charge: {charge}")
 
-# Example usage
-
-# Create a 5x5 grid with spacing h = 1.0
-N = 11
-h = 1.0
-charge_grid = ChargeGridWithSmoothing(N, h)
-
-# Set some charges on specific grid points (e.g., a point charge at (2, 2))
-charge_grid.set_charge(2, 2, 10)  # Charge at the center
-charge_grid.set_charge(0, 0, 0)   # Charge at (1,1)
-charge_grid.set_charge(10, 10, 10)  # Charge at (3,3)
-
-# Display initial grid
-print("Initial grid with specified charges:")
-charge_grid.display_grid()
-
-# Run the update process until equilibrium
-charge_grid.run_until_equilibrium()
-
-# Display updated grid
-print("\nFinal grid after equilibrium:")
-charge_grid.display_grid()
-charge_grid.display_physical_positions()
-# Get the charge at a specific point
-print(f"\nCharge at (2, 2): {charge_grid.get_charge_at(2, 2)}")
-print(f"Charge at (1, 1): {charge_grid.get_charge_at(1, 1)}")  # Fixed charge
-print(f"Charge at (3, 3): {charge_grid.get_charge_at(3, 3)}")  # Fixed charge
+    def plot_phi(self):
+        """
+        
+        """
+        extent = [0, self.l * 100, 0, self.l * 100]  # convert to cm
+        plt.imshow(np.round(self.phi, 4), origin='lower', extent=extent, cmap='viridis')
+        plt.colorbar(label='Potential (V)')
+        plt.title("Potential Distribution")
+        plt.xlabel("x (cm)")
+        plt.ylabel("y (cm)")
+        plt.grid(False)
+        plt.show()
 
 
 
