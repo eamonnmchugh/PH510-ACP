@@ -32,58 +32,112 @@ start_time = time.time()
 
 
 
-
-class ChargeGridWithSpacing:
-    def __init__(self, N, h):
+class ChargeGridWithSmoothing:
+    def __init__(self, N, h, tolerance=1e-100, iterations=10000):
         """
-        Initialize the grid with N x N points, separated by a distance h.
-        All points start with no charge (charge = 0).
-        
-        :param N: Size of the grid (NxN)
-        :param h: Distance between consecutive points in the grid
+        Initialize the charge grid with N x N points and spacing h.
+
+        :param N: Size of the grid (N x N)
+        :param h: Distance between adjacent grid points
+        :param tolerance: Tolerance for convergence (equilibrium condition)
+        :param max_iter: Maximum number of iterations before stopping
         """
         self.N = N
         self.h = h
-        # Create an NxN grid of points, initialized with no charge (0).
-        # Grid coordinates will be spaced by h.
+        self.tolerance = tolerance
+        self.max_iter = iterations
+        # Initialize a charge grid with all zeros initially.
         self.grid = np.zeros((N, N))
-    
+        # To track fixed charge points (those set by the user)
+        self.fixed_charges = set()
+
     def set_charge(self, x, y, charge):
         """
-        Set a specified charge at the grid point (x, y).
+        Set the charge at grid point (x, y).
         
         :param x: Row index (0 <= x < N)
         :param y: Column index (0 <= y < N)
-        :param charge: Charge value to set at (x, y)
+        :param charge: The charge to set at (x, y)
         """
         if 0 <= x < self.N and 0 <= y < self.N:
             self.grid[x, y] = charge
-        else:
-            raise ValueError(f"Invalid coordinates: ({x}, {y}) outside grid bounds.")
-    
-    def get_charge(self, x, y):
-        """
-        Get the charge at the grid point (x, y).
-        
-        :param x: Row index (0 <= x < N)
-        :param y: Column index (0 <= y < N)
-        :return: Charge at point (x, y)
-        """
-        if 0 <= x < self.N and 0 <= y < self.N:
-            return self.grid[x, y]
+            self.fixed_charges.add((x, y))
         else:
             raise ValueError(f"Invalid coordinates: ({x}, {y}) outside grid bounds.")
 
-    def charge_neighbours(self):
+    def update_charges(self):
         """
-        
+        Update the charge at each point to be the average of its neighboring points.
+        Fixed charges (those set by the user) remain unchanged.
+        Boundary points (i.e., points where i=0 or i=N-1 or j=0 or j=N-1) 
+        will only average neighboring points within the grid.
         """
-        i, j = 0
-        while i < self.N:
-            while j < self.N:
-                neighbours = np.array( [self.grid[i+1, j], self.grid[i-1, j], self.grid[i, j-1],
-                self.grid[i, j+1] ] )
-                self.grid[i, j] = np.mean(neighbours)
+        new_grid = np.copy(self.grid)  # Copy the grid to avoid modifying during iteration
+
+        for i in range(self.N):
+            for j in range(self.N):
+                # Skip if the charge is fixed at this point
+                if (i, j) in self.fixed_charges:
+                    continue
+
+                # Collect the neighboring points within the grid for averaging
+                neighboring_charges = []
+
+                # Check if the neighbor (i+1, j) is within bounds
+                if i + 1 < self.N:
+                    neighboring_charges.append(self.grid[i+1, j])
+                
+                # Check if the neighbor (i-1, j) is within bounds
+                if i - 1 >= 0:
+                    neighboring_charges.append(self.grid[i-1, j])
+                
+                # Check if the neighbor (i, j+1) is within bounds
+                if j + 1 < self.N:
+                    neighboring_charges.append(self.grid[i, j+1])
+                
+                # Check if the neighbor (i, j-1) is within bounds
+                if j - 1 >= 0:
+                    neighboring_charges.append(self.grid[i, j-1])
+
+                # Calculate the average of valid neighboring charges
+                if neighboring_charges:
+                    new_grid[i, j] = np.mean(neighboring_charges)
+
+        # Update the grid with the new values
+        self.grid = new_grid
+
+    def run_until_equilibrium(self):
+        """
+        Run the charge update process iteratively until equilibrium is reached.
+        The process stops when the maximum change in charges between two consecutive iterations
+        is smaller than the specified tolerance, or the maximum number of iterations is reached.
+        """
+        iteration = 0
+        while iteration < self.max_iter:
+            iteration += 1
+
+            # Copy the current grid for comparison after update
+            old_grid = np.copy(self.grid)
+
+            # Perform charge update
+            self.update_charges()
+
+            # Calculate the maximum change between the old and new grid
+            max_change = np.max(np.abs(self.grid - old_grid))
+
+            # If the maximum change is less than the tolerance, we're done
+            if max_change < self.tolerance:
+                print(f"Equilibrium reached after {iteration} iterations.")
+                break
+        else:
+            print(f"Maximum iterations ({self.max_iter}) reached without equilibrium.")
+
+    def get_charge_at(self, x, y):
+        """Get the charge at a specific grid point."""
+        if 0 <= x < self.N and 0 <= y < self.N:
+            return self.grid[x, y]
+        else:
+            raise ValueError("Invalid grid point.")
 
     def get_physical_coordinates(self, x, y):
         """
@@ -103,7 +157,7 @@ class ChargeGridWithSpacing:
     
     def display_grid(self):
         """Display the current charge grid."""
-        print(self.grid)
+        print(np.round(self.grid, 2))
     
     def display_physical_positions(self):
         """Display the grid's physical coordinates and their charges."""
@@ -111,27 +165,44 @@ class ChargeGridWithSpacing:
             for y in range(self.N):
                 x_coord, y_coord = self.get_physical_coordinates(x, y)
                 charge = self.grid[x, y]
-                print(f"Position ({x_coord:.2f}cm, {y_coord:.2f}cm) has charge: {charge}")
+                print(f"Position ({x_coord:.2f}, {y_coord:.2f})cm has charge: {charge}")
 
 # Example usage
-# Create a 5x5 grid with points separated by a distance of 2.0 units
-charge_grid = ChargeGridWithSpacing(5, 2.0)
 
-# Set some charges on specific grid points
-charge_grid.set_charge(1, 1, 10)  # Set a charge of 10 at (1,1)
-charge_grid.set_charge(3, 4, -5)  # Set a charge of -5 at (3,4)
-charge_grid.set_charge(0, 0, 20)  # Set a charge of 20 at (0,0)
+# Create a 5x5 grid with spacing h = 1.0
+N = 11
+h = 1.0
+charge_grid = ChargeGridWithSmoothing(N, h)
 
-# Display the grid (charge values)
+# Set some charges on specific grid points (e.g., a point charge at (2, 2))
+charge_grid.set_charge(2, 2, 10)  # Charge at the center
+charge_grid.set_charge(0, 0, 0)   # Charge at (1,1)
+charge_grid.set_charge(10, 10, 10)  # Charge at (3,3)
+
+# Display initial grid
+print("Initial grid with specified charges:")
 charge_grid.display_grid()
 
-# Display the physical positions and their charges
-print("\nPhysical positions and their charges:")
-charge_grid.display_physical_positions()
+# Run the update process until equilibrium
+charge_grid.run_until_equilibrium()
 
+# Display updated grid
+print("\nFinal grid after equilibrium:")
+charge_grid.display_grid()
+charge_grid.display_physical_positions()
 # Get the charge at a specific point
-print(f"\nCharge at (1, 1): {charge_grid.get_charge(1, 1)}")
-print(f"Charge at (3, 4): {charge_grid.get_charge(3, 4)}")
+print(f"\nCharge at (2, 2): {charge_grid.get_charge_at(2, 2)}")
+print(f"Charge at (1, 1): {charge_grid.get_charge_at(1, 1)}")  # Fixed charge
+print(f"Charge at (3, 3): {charge_grid.get_charge_at(3, 3)}")  # Fixed charge
+
+
+
+
+
+
+
+
+
 
 
 
