@@ -5,6 +5,7 @@ This code is suitably licensed:
 https://github.com/eamonnmchugh/PH510-ACP/blob/Assignment-4/MIT%20Licence
 """
 
+import random
 import time
 import numpy as np
 import matplotlib.pyplot as plt
@@ -32,58 +33,51 @@ start_time = time.time()
 # no_of_samples = np.int32(100000000/no_of_ranks)
 
 
-
-class ChargeGridWithSmoothing:
-    def __init__(self, N, h):
-        """
-        Initialize the charge grid with N x N points and spacing h.
-
-        :param N: Size of the grid (N x N)
-        :param h: Distance between adjacent grid points
-        :param tolerance: Tolerance for convergence (equilibrium condition)
-        :param max_iter: Maximum number of iterations before stopping
-        """
-        self.N = N
-        self.h = h
-        self.tolerance = tolerance
-        self.max_iter = iterations
-        # Initialize a charge grid with all zeros initially.
-        self.phi = np.zeros((N, N))
-        self.f = np.zeros((N, N))
-        # To track fixed charge points (those set by the user)
+class PoissonSolver2D:
+    """
+    
+    """
+    def __init__(self, length, number_of_points):
+        self.l = length  # physical length in meters
+        self.n = number_of_points  # number of grid points
+        self.h = self.l / (self.n - 1)
+        self.phi = np.random.uniform(-100, 1000, (self.n, self.n))
+        self.f = np.zeros((self.n, self.n))
+        self.fixed_potentials = set()
         self.fixed_charges = set()
 
-    def set_charge(self, x, y, charge):
+    def set_potential(self, x, y, potential):
         """
-        Set the charge at grid point (x, y).
+        Set the potential at grid point (x, y).
         
         :param x: Row index (0 <= x < N)
         :param y: Column index (0 <= y < N)
-        :param charge: The charge to set at (x, y)
+        :param potential: The potential to set at (x, y)
         """
-        if 0 <= x < self.N and 0 <= y < self.N:
-            self.phi[x, y] = charge
-            self.fixed_charges.add((x, y))
+        if 0 <= x < self.n and 0 <= y < self.n:
+            self.phi[x, y] = potential
+            self.fixed_potentials.add((x, y))
         else:
             raise ValueError(f"Invalid coordinates: ({x}, {y}) outside grid bounds.")
+        return self.phi
 
     def set_boundary_conditions(self, bc_type):
         """
         Applying different preset boundary conditions
         """
         if bc_type == 'all_1V':
-            self.phi[0, :] = 1      # Top
-            self.phi[-1, :] = 1     # Bottom
-            self.phi[:, 0] = 1      # Left
-            self.phi[:, -1] = 1     # Right
+            self.phi[-1, :] = 1  # Top
+            self.phi[0, :] = 1   # Bottom
+            self.phi[:, 0] = 1   # Left
+            self.phi[:, -1] = 1  # Right
         elif bc_type == 'tb1_lr-1':
-            self.phi[0, :] = 1
             self.phi[-1, :] = 1
+            self.phi[0, :] = 1
             self.phi[:, 0] = -1
             self.phi[:, -1] = -1
         elif bc_type == 'tl2_b0_r-4':
-            self.phi[0, :] = 2
-            self.phi[-1, :] = 0
+            self.phi[-1, :] = 2
+            self.phi[0, :] = 0
             self.phi[:, 0] = 2
             self.phi[:, -1] = -4
         else:
@@ -91,14 +85,14 @@ class ChargeGridWithSmoothing:
 
         # Add boundary points to fixed_potentials set
         for i in range(self.n):
-            self.fixed_charges.add((self.n - 1, i))  # Top
-            self.fixed_charges.add((0, i))           # Bottom
-            self.fixed_charges.add((i, 0))           # Left
-            self.fixed_charges.add((i, self.n - 1))  # Right
+            self.fixed_potentials.add((self.n - 1, i))  # Top
+            self.fixed_potentials.add((0, i))           # Bottom
+            self.fixed_potentials.add((i, 0))           # Left
+            self.fixed_potentials.add((i, self.n - 1))  # Right
 
         return self.phi
 
-    def relax(self, max_iter=10000, tol=1e-10):
+    def overrelax(self, max_iter=10000, tol=1e-10):
         """
         Update the potential at each point to be the average of its neighboring points. Fixed
         potentials (those set by the user) remain unchanged. Boundary points (i.e., points where
@@ -108,38 +102,36 @@ class ChargeGridWithSmoothing:
         when the maximum number of iterations is reached.
         """
         omega = 2/(1 + np.sin(np.pi/self.n))
-        new_phi = self.phi
         for iteration in range(max_iter):
             max_delta = 0
             for i in range(0, self.n):
                 for j in range(0, self.n):
-                    if (i, j) in self.fixed_charges:
+                    if (i, j) in self.fixed_potentials:
                         continue
 
                     # Collect the neighboring points within the grid for averaging
-                    neighboring_charges = []
+                    neighboring_potentials = []
 
                     # Check if the neighbor (i+1, j) is within bounds
                     if i + 1 < self.n:
-                        neighboring_charges.append(self.phi[i+1, j])
+                        neighboring_potentials.append(self.phi[i+1, j])
 
                     # Check if the neighbor (i-1, j) is within bounds
                     if i - 1 >= 0:
-                        neighboring_charges.append(self.phi[i-1, j])
+                        neighboring_potentials.append(self.phi[i-1, j])
 
                     # Check if the neighbor (i, j+1) is within bounds
                     if j + 1 < self.n:
-                        neighboring_charges.append(self.phi[i, j+1])
+                        neighboring_potentials.append(self.phi[i, j+1])
 
                     # Check if the neighbor (i, j-1) is within bounds
                     if j - 1 >= 0:
-                        neighboring_charges.append(self.phi[i, j-1])
+                        neighboring_potentials.append(self.phi[i, j-1])
 
                     old_phi = self.phi[i, j]
-                    rhs = -(self.h**2 * self.f[i, j]) + np.mean(neighboring_charges)
-                    new_phi[i,j] = (omega * rhs) + ((1 - omega) * old_phi)
-                    max_delta = max(max_delta, abs(new_phi[i,j] - old_phi))
-            self.phi = new_phi
+                    rhs = -(self.h**2 * f[i, j]) + np.mean(neighboring_potentials)
+                    self.phi[i,j] = (omega * rhs) + ((1 - omega) * old_phi)
+                    max_delta = max(max_delta, abs(self.phi[i,j] - old_phi))
             if max_delta < tol:
                 print(f"Converged in {iteration} iterations.")
                 print(np.round(self.phi, 2))
@@ -148,44 +140,24 @@ class ChargeGridWithSmoothing:
             print(f"Maximum iterations ({max_iter}) reached without equilibrium.")
         return self.phi
 
-    def get_charge_at(self, x, y):
-        """Get the charge at a specific grid point."""
-        if 0 <= x < self.N and 0 <= y < self.N:
-            return self.phi[x, y]
-        else:
-            raise ValueError("Invalid grid point.")
-
-    def get_physical_coordinates(self, x, y):
+    def boundary_check(self, i, j):
         """
-        Get the physical coordinates of a point in the grid.
+        
+        """
+        return i == 0 or j == 0 or i == self.n - 1 or j == self.n - 1
+
+    def get_potential(self, x, y):
+        """
+        Get the potential at the grid point (x, y).
         
         :param x: Row index (0 <= x < N)
         :param y: Column index (0 <= y < N)
-        :return: Physical coordinates (x_coord, y_coord)
+        :return: potential at point (x, y)
         """
-        if 0 <= x < self.N and 0 <= y < self.N:
-            # Convert grid index to physical coordinates (with distance h)
-            x_coord = x * self.h
-            y_coord = y * self.h
-            return x_coord, y_coord
+        if 0 <= x < self.n and 0 <= y < self.n:
+            return self.phi[x, y]
         else:
             raise ValueError(f"Invalid coordinates: ({x}, {y}) outside grid bounds.")
-    
-    def display_grid(self):
-        """
-        Display the current charge grid.
-        """
-        print(np.round(self.phi, 2))
-    
-    def display_physical_positions(self):
-        """
-        Display the grid's physical coordinates and their charges.
-        """
-        for x in range(self.N):
-            for y in range(self.N):
-                x_coord, y_coord = self.get_physical_coordinates(x, y)
-                charge = self.phi[x, y]
-                print(f"Position ({x_coord:.2f}, {y_coord:.2f})cm has charge: {charge}")
 
     def plot_phi(self):
         """
@@ -193,12 +165,25 @@ class ChargeGridWithSmoothing:
         """
         extent = [0, self.l * 100, 0, self.l * 100]  # convert to cm
         plt.imshow(np.round(self.phi, 4), origin='lower', extent=extent, cmap='viridis')
+#        plt.imshow(np.round(self.phi, 4), origin='lower', extent=extent, cmap='inferno')
         plt.colorbar(label='Potential (V)')
         plt.title("Potential Distribution")
         plt.xlabel("x (cm)")
         plt.ylabel("y (cm)")
         plt.grid(False)
         plt.show()
+
+# Example usage
+example = PoissonSolver2D(0.10, 50)
+phi, f = example.phi, example.f
+phi = example.set_boundary_conditions('tl2_b0_r-4')
+phi = example.set_potential(9, 10, 2)
+phi = example.set_potential(20, 30, 2)
+phi = example.set_potential(25, 25, 0)
+print(phi)
+print()
+phi = example.overrelax()
+example.plot_phi()
 
 
 
@@ -219,7 +204,6 @@ class ChargeGridWithSmoothing:
 end_time = time.time()
 execution_time = end_time - start_time
 print(f"The code took {execution_time} seconds to run for 1 processor")
-print()
 
 # If running using 8 processors, it might be beneficial to comment out the MPI.Finalize() command
 # below. For an unknown reason, the runtime increases significantly: using a sample size of
