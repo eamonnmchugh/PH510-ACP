@@ -129,7 +129,7 @@ class PoissonSolver2D:
                         neighboring_potentials.append(self.phi[i, j-1])
 
                     old_phi = self.phi[i, j]
-                    rhs = -(self.h**2 * f[i, j]) + np.mean(neighboring_potentials)
+                    rhs = -(self.h**2 * self.f[i, j]) + np.mean(neighboring_potentials)
                     self.phi[i,j] = (omega * rhs) + ((1 - omega) * old_phi)
                     max_delta = max(max_delta, abs(self.phi[i,j] - old_phi))
             if max_delta < tol:
@@ -145,6 +145,95 @@ class PoissonSolver2D:
         
         """
         return i == 0 or j == 0 or i == self.n - 1 or j == self.n - 1
+
+    def random_walk(self, starting_point_i, starting_point_j, num_walkers=100000):
+        """
+        Simulates random walkers starting at (starting_point_i, starting_point_j),
+        and returns the empirical probabilities of reaching each boundary point.
+
+        :param starting_point_i: Starting row index
+        :param starting_point_j: Starting column index
+        :param num_walkers: Number of random walkers to simulate
+        :return: A dictionary {(x, y): probability} for each boundary point (x, y)
+        """
+        values = []
+        for k in range(num_walkers):
+            i, j = starting_point_i, starting_point_j
+            while not self.boundary_check(i, j):
+                direction = random.choice(['up', 'down', 'left', 'right'])
+                if direction == 'up':
+                    i += 1
+                elif direction == 'down':
+                    i -= 1
+                elif direction == 'left':
+                    j -= 1
+                elif direction == 'right':
+                    j += 1
+            if self.boundary_check(i, j):
+                values.append(self.phi[i, j])
+        return np.mean(values), np.std(values)
+
+    def random_walk_probabilities(self, starting_point_i, starting_point_j, num_walkers=100000):
+        """
+        Simulates random walkers starting at (starting_point_i, starting_point_j),
+        and returns the empirical probabilities of reaching each boundary point.
+
+        :param starting_point_i: Starting row index
+        :param starting_point_j: Starting column index
+        :param num_walkers: Number of random walkers to simulate
+        :return: A dictionary {(x, y): probability} for each boundary point (x, y)
+        """
+        prob_grid = np.zeros((self.n, self.n))
+        boundary_hits = {}
+
+        # Initialize count for each boundary point
+        for i in range(self.n):
+            boundary_hits[(0, i)] = 0       # Bottom
+            boundary_hits[(self.n - 1, i)] = 0  # Top
+            boundary_hits[(i, 0)] = 0       # Left
+            boundary_hits[(i, self.n - 1)] = 0  # Right
+
+        for k in range(num_walkers):
+            i, j = starting_point_i, starting_point_j
+            while not self.boundary_check(i, j):
+                direction = random.choice(['up', 'down', 'left', 'right'])
+                if direction == 'up':
+                    i += 1
+                elif direction == 'down':
+                    i -= 1
+                elif direction == 'left':
+                    j -= 1
+                elif direction == 'right':
+                    j += 1
+            boundary_hits[(i, j)] += 1
+
+#        # Normalize to get probabilities
+#        probabilities = {pt: count / num_walkers for pt, count in boundary_hits.items() if count > 0}
+        # Fill the 2D probability grid
+        for (i, j), count in boundary_hits.items():
+            prob_grid[i, j] = count / num_walkers
+        return prob_grid 
+
+#    def potential_via_greens(self, starting_point_i, starting_point_j, num_walkers=100000):
+#        """
+#        filler
+#        """
+##       total = 0.0
+#        i, j = starting_point_i, starting_point_j
+#        greens_laplace = self.random_walk_probabilities(i, j)[0]
+#        site_visits = self.random_walk_probabilities(i, j)[1]
+#        for p in range(1, self.n - 1):
+#            for q in range(1, self.n - 1):
+##                if self.f[p, q] == 0:
+##                    continue
+###                green_charge = self.h**2/num_walkers * np.sum(site_visits[p, q])
+#                green_charge[p, q] = self.h**2/num_walkers * np.sum(site_visits[p, q])
+#        term1 = np.sum(greens_laplace[i, j] * self.phi[])
+#        term2 = np.sum(green_charge * self.f[p, q])
+#        phi_greens = term1 + term2
+##                green_val, _ = self.random_walk_green(r_target_i, r_target_j, num_walks_per_point)
+##                total += green_val * self.f[i, j] * self.h**2
+#        return phi_greens
 
     def get_potential(self, x, y):
         """
@@ -174,16 +263,20 @@ class PoissonSolver2D:
         plt.show()
 
 # Example usage
-example = PoissonSolver2D(0.10, 50)
-phi, f = example.phi, example.f
-phi = example.set_boundary_conditions('tl2_b0_r-4')
-phi = example.set_potential(9, 10, 2)
-phi = example.set_potential(20, 30, 2)
-phi = example.set_potential(25, 25, 0)
-print(phi)
-print()
-phi = example.overrelax()
-example.plot_phi()
+#example = PoissonSolver2D(0.10, 11)
+#phi, f = example.phi, example.f
+#phi = example.set_boundary_conditions('all_1V')
+#phi = example.set_potential(9, 10, 2)
+#phi = example.set_potential(20, 30, 2)
+#phi = example.set_potential(25, 25, 0)
+#print(phi)
+#phi = example.overrelax()
+#random_walk = example.random_walk_probabilities(5, 5)[0]
+#print()
+#print(random_walk)
+#print(example.compute_potential_at_point(24, 24))
+#print(example.get_potential(5, 5))
+#example.plot_phi()
 
 
 
@@ -201,9 +294,9 @@ example.plot_phi()
 # long the code took to run. This allows for comparison of runtimes for varying number of
 # processors. Getting an estimate of the parallel efficiency of the code.
 #if rank==0:
-end_time = time.time()
-execution_time = end_time - start_time
-print(f"The code took {execution_time} seconds to run for 1 processor")
+#end_time = time.time()
+#execution_time = end_time - start_time
+#print(f"The code took {execution_time} seconds to run for 1 processor")
 
 # If running using 8 processors, it might be beneficial to comment out the MPI.Finalize() command
 # below. For an unknown reason, the runtime increases significantly: using a sample size of
