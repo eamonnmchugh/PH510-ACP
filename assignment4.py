@@ -45,6 +45,7 @@ class PoissonSolver2D:
         self.f = np.zeros((self.n, self.n))
         self.fixed_potentials = set()
         self.fixed_charges = set()
+        self.d = 2
 
     def set_potential(self, x, y, potential):
         """
@@ -129,7 +130,7 @@ class PoissonSolver2D:
                         neighboring_potentials.append(self.phi[i, j-1])
 
                     old_phi = self.phi[i, j]
-                    rhs = -(self.h**2 * self.f[i, j]) + np.mean(neighboring_potentials)
+                    rhs = (0.25 * self.h**2 * self.f[i, j]) + np.mean(neighboring_potentials)
                     self.phi[i,j] = (omega * rhs) + ((1 - omega) * old_phi)
                     max_delta = max(max_delta, abs(self.phi[i,j] - old_phi))
             if max_delta < tol:
@@ -171,7 +172,7 @@ class PoissonSolver2D:
                     j += 1
             if self.boundary_check(i, j):
                 values.append(self.phi[i, j])
-        return np.mean(values), np.std(values)
+        return np.mean(values)
 
     def random_walk_probabilities(self, starting_point_i, starting_point_j, num_walkers=100000):
         """
@@ -184,6 +185,7 @@ class PoissonSolver2D:
         :return: A dictionary {(x, y): probability} for each boundary point (x, y)
         """
         prob_grid = np.zeros((self.n, self.n))
+        site_visits = np.zeros((self.n, self.n))
         boundary_hits = {}
 
         # Initialize count for each boundary point
@@ -205,35 +207,13 @@ class PoissonSolver2D:
                     j -= 1
                 elif direction == 'right':
                     j += 1
+                site_visits[(i, j)] += 1
             boundary_hits[(i, j)] += 1
 
-#        # Normalize to get probabilities
-#        probabilities = {pt: count / num_walkers for pt, count in boundary_hits.items() if count > 0}
         # Fill the 2D probability grid
         for (i, j), count in boundary_hits.items():
             prob_grid[i, j] = count / num_walkers
-        return prob_grid 
-
-#    def potential_via_greens(self, starting_point_i, starting_point_j, num_walkers=100000):
-#        """
-#        filler
-#        """
-##       total = 0.0
-#        i, j = starting_point_i, starting_point_j
-#        greens_laplace = self.random_walk_probabilities(i, j)[0]
-#        site_visits = self.random_walk_probabilities(i, j)[1]
-#        for p in range(1, self.n - 1):
-#            for q in range(1, self.n - 1):
-##                if self.f[p, q] == 0:
-##                    continue
-###                green_charge = self.h**2/num_walkers * np.sum(site_visits[p, q])
-#                green_charge[p, q] = self.h**2/num_walkers * np.sum(site_visits[p, q])
-#        term1 = np.sum(greens_laplace[i, j] * self.phi[])
-#        term2 = np.sum(green_charge * self.f[p, q])
-#        phi_greens = term1 + term2
-##                green_val, _ = self.random_walk_green(r_target_i, r_target_j, num_walks_per_point)
-##                total += green_val * self.f[i, j] * self.h**2
-#        return phi_greens
+        return prob_grid, site_visits 
 
     def get_potential(self, x, y):
         """
@@ -247,6 +227,39 @@ class PoissonSolver2D:
             return self.phi[x, y]
         else:
             raise ValueError(f"Invalid coordinates: ({x}, {y}) outside grid bounds.")
+
+    def greens_function(self, starting_point_i, starting_point_j, num_walkers=100000):
+        """
+        
+        """
+        green_charge = np.zeros((self.n, self.n))
+        i, j = starting_point_i, starting_point_j
+        site_visits = self.random_walk_probabilities(i, j)[1]
+        for p in range(1, self.n - 1):
+            for q in range(1, self.n - 1): 
+                green_charge[p, q] = self.h**2/num_walkers * site_visits[p, q]
+        return green_charge
+
+#    def potential_via_greens(self, starting_point_i, starting_point_j, num_walkers=100000):
+#        """
+#        filler
+#        """
+#       total = 0.0
+#        i, j = starting_point_i, starting_point_j
+#        greens_laplace = self.random_walk_probabilities(i, j)[0]
+#        site_visits = self.random_walk_probabilities(i, j)[1]
+#        for p in range(1, self.n - 1):
+#            for q in range(1, self.n - 1):
+#                if self.f[p, q] == 0:
+#                   continue
+#                green_charge = self.h**2/num_walkers * np.sum(site_visits[p, q])
+#                green_charge[p, q] = self.h**2/num_walkers * site_visits[p, q]
+#        term1 = np.sum(greens_laplace[i, j] * self.phi[])
+#        term2 = np.sum(green_charge * self.f[p, q])
+#        phi_greens = term1 + term2
+#                green_val, _ = self.random_walk_green(r_target_i, r_target_j, num_walks_per_point)
+#                total += green_val * self.f[i, j] * self.h**2
+#        return phi_greens
 
     def plot_phi(self):
         """
@@ -263,17 +276,24 @@ class PoissonSolver2D:
         plt.show()
 
 # Example usage
-#example = PoissonSolver2D(0.10, 11)
-#phi, f = example.phi, example.f
-#phi = example.set_boundary_conditions('all_1V')
-#phi = example.set_potential(9, 10, 2)
+example = PoissonSolver2D(0.10, 9)
+phi, f = example.phi, example.f
+phi = example.set_boundary_conditions('tb1_lr-1')
+#phi = example.set_potential(4, 4, 0)
 #phi = example.set_potential(20, 30, 2)
 #phi = example.set_potential(25, 25, 0)
-#print(phi)
-#phi = example.overrelax()
-#random_walk = example.random_walk_probabilities(5, 5)[0]
-#print()
-#print(random_walk)
+print(phi)
+phi = example.overrelax()
+random_walk = example.random_walk(4, 4)
+random_walk_prob = example.random_walk_probabilities(4, 4)
+print("Random Walk", random_walk)
+print("Prob")
+print(random_walk_prob[0])
+print("site visits")
+print(random_walk_prob[1])
+green = example.greens_function(4, 4)
+print("greens")
+print(green)
 #print(example.compute_potential_at_point(24, 24))
 #print(example.get_potential(5, 5))
 #example.plot_phi()
