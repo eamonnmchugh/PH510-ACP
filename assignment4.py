@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 #    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 #    print(f"{no_of_ranks} Processors:")
 #    print()
-start_time = time.time()
+#    start_time = time.time()
 
 # Setting the number of samples to be inversely proportional to the number of ranks. Each rank runs
 # the set number of samples, meaning the total number of samples used is equal for all number of
@@ -38,15 +38,16 @@ class PoissonSolver2D:
     """
     
     """
-    def __init__(self, length, number_of_points):
+    def __init__(self, length, number_of_points, no_of_samples):
         self.l = length  # physical length in meters
         self.n = number_of_points  # number of grid points
         self.h = self.l / (self.n - 1)
-        self.phi = np.random.uniform(-100, 1000, (self.n, self.n))
+        self.phi = np.random.uniform(0, 10, (self.n, self.n))
         self.f = np.zeros((self.n, self.n))
         self.fixed_potentials = set()
         self.fixed_charges = set()
         self.d = 2
+        self.no_of_samples = no_of_samples
 
     def set_potential(self, x, y, potential):
         """
@@ -110,9 +111,10 @@ class PoissonSolver2D:
                 self.f[i, :] = 1 - (i/(self.n - 1))
 
         elif distribution_type == 'exp_decay':
-            x0, y0 = self.l/2
+            x0, y0 = self.l/2, self.l/2
             r = np.sqrt((x - x0)**2 + (y - y0)**2)
-            self.f[:, :] = np.exp(-2000 * r)
+            self.f[:, :] = np.exp(-2000 * np.abs(r))
+        return self.f
 
     def overrelax(self, max_iter=10000, tol=1e-10):
         """
@@ -155,8 +157,8 @@ class PoissonSolver2D:
                     self.phi[i,j] = (omega * rhs) + ((1 - omega) * old_phi)
                     max_delta = max(max_delta, abs(self.phi[i,j] - old_phi))
             if max_delta < tol:
-                print(f"Converged in {iteration} iterations.")
-                print(np.round(self.phi, 2))
+#                print(f"Over-relaxation method took {iteration} iterations before converging.")
+#                print(np.round(self.phi, 2))
                 break
         else:
             print(f"Maximum iterations ({max_iter}) reached without equilibrium.")
@@ -168,7 +170,7 @@ class PoissonSolver2D:
         """
         return i == 0 or j == 0 or i == self.n - 1 or j == self.n - 1
 
-    def random_walk(self, starting_point_i, starting_point_j, num_walkers=100000):
+    def random_walk(self, starting_point_i, starting_point_j):
         """
         Simulates random walkers starting at (starting_point_i, starting_point_j),
         and returns the empirical probabilities of reaching each boundary point.
@@ -179,7 +181,7 @@ class PoissonSolver2D:
         :return: A dictionary {(x, y): probability} for each boundary point (x, y)
         """
         values = []
-        for k in range(num_walkers):
+        for k in range(self.no_of_samples):
             i, j = starting_point_i, starting_point_j
             while not self.boundary_check(i, j):
                 direction = random.choice(['up', 'down', 'left', 'right'])
@@ -195,7 +197,7 @@ class PoissonSolver2D:
                 values.append(self.phi[i, j])
         return np.mean(values)
 
-    def random_walk_probabilities(self, starting_point_i, starting_point_j, num_walkers=100000):
+    def random_walk_probabilities(self, starting_point_i, starting_point_j):
         """
         Simulates random walkers starting at (starting_point_i, starting_point_j),
         and returns the empirical probabilities of reaching each boundary point.
@@ -206,19 +208,20 @@ class PoissonSolver2D:
         :return: A dictionary {(x, y): probability} for each boundary point (x, y)
         """
         prob_grid = np.zeros((self.n, self.n))
-        site_visits = np.zeros((self.n, self.n))
+        self.site_visits = np.zeros((self.n, self.n))
         boundary_hits = {}
 
         # Initialize count for each boundary point
         for i in range(self.n):
-            boundary_hits[(0, i)] = 0       # Bottom
+            boundary_hits[(0, i)] = 0           # Bottom
             boundary_hits[(self.n - 1, i)] = 0  # Top
-            boundary_hits[(i, 0)] = 0       # Left
+            boundary_hits[(i, 0)] = 0           # Left
             boundary_hits[(i, self.n - 1)] = 0  # Right
 
-        for k in range(num_walkers):
+        for k in range(self.no_of_samples):
             i, j = starting_point_i, starting_point_j
             while not self.boundary_check(i, j):
+                self.site_visits[(i, j)] += 1
                 direction = random.choice(['up', 'down', 'left', 'right'])
                 if direction == 'up':
                     i += 1
@@ -228,13 +231,13 @@ class PoissonSolver2D:
                     j -= 1
                 elif direction == 'right':
                     j += 1
-                site_visits[(i, j)] += 1
+#                self.site_visits[(i, j)] += 1
             boundary_hits[(i, j)] += 1
 
         # Fill the 2D probability grid
         for (i, j), count in boundary_hits.items():
-            prob_grid[i, j] = count / num_walkers
-        return prob_grid, site_visits 
+            prob_grid[i, j] = count / self.no_of_samples
+        return prob_grid
 
     def get_potential(self, x, y):
         """
@@ -249,33 +252,39 @@ class PoissonSolver2D:
         else:
             raise ValueError(f"Invalid coordinates: ({x}, {y}) outside grid bounds.")
 
-    def greens_function(self, starting_point_i, starting_point_j, num_walkers=100000):
+    def greens_charge(self, starting_point_i, starting_point_j):
         """
         
         """
         green_charge = np.zeros((self.n, self.n))
         i, j = starting_point_i, starting_point_j
-        site_visits = self.random_walk_probabilities(i, j)[1]
         for p in range(0, self.n):
             for q in range(0, self.n): 
-                green_charge[p, q] = self.h**2/num_walkers * site_visits[p, q]
+                green_charge[p, q] = self.h**2/self.no_of_samples * self.site_visits[p, q]
         return green_charge
 
-    def potential_via_greens(self, starting_point_i, starting_point_j, num_walkers=100000):
+    def greens_function(self, starting_point_i, starting_point_j):
         """
         
         """
         i, j = starting_point_i, starting_point_j
-        greens_laplace = self.random_walk_probabilities(i, j)[0]
+        return self.random_walk_probabilities(i, j) + self.greens_charge(i, j)
+
+    def potential_via_greens(self, starting_point_i, starting_point_j):
+        """
+        
+        """
+        i, j = starting_point_i, starting_point_j
+        greens_laplace = self.random_walk_probabilities(i, j)
         term1 = np.zeros((self.n, self.n))
         for x_b in range(0, self.n):
             for y_b in range(0, self.n):
                 if self.boundary_check(x_b, y_b):
                     term1[x_b, y_b] = greens_laplace[x_b, y_b] * self.phi[x_b, y_b]
         term1_sum = np.sum(term1)
-        term2 = np.sum(self.greens_function(i, j) * self.f)
+        term2 = np.sum(self.greens_charge(i, j) * self.f)
         phi_greens = term1_sum + term2
-        return phi_greens, greens_laplace, self.phi, term1, term2
+        return phi_greens
 
     def plot_value(self, value, title, decimal_places):
         """
@@ -291,76 +300,3 @@ class PoissonSolver2D:
         plt.ylabel("y (cm)")
         plt.grid(False)
         plt.show()
-
-# Question 3
-init_grid = PoissonSolver2D(0.10, 101)
-phi, f = init_grid.phi, init_grid.f
-print("Green's function evaluation for a square grid of side length 10cm:")
-
-# (a)
-a = init_grid.random_walk_probabilities(50, 50)
-print(f"At centre point (5cm, 5cm):\n{a[0]}")
-
-# (b)
-b = init_grid.random_walk_probabilities(25, 25)
-print(f"At (2.5cm, 2.5cm):\n{b[0]}")
-
-# (c)
-c = init_grid.random_walk_probabilities(1, 25)
-print(f"At (0.1cm, 2.5cm):\n{c[0]}")
-
-# (d)
-d = init_grid.random_walk_probabilities(1, 1)
-print(f"At (0.1cm, 0.1cm):\n{d[0]}")
-
-# 0.05 / init_grid.h
-#phi = example.set_boundary_conditions('tb1_lr-1')
-#phi = example.set_potential(4, 4, 0)
-#phi = example.set_potential(20, 30, 2)
-#phi = example.set_potential(25, 25, 0)
-#print(phi)
-#phi = example.overrelax()
-#random_walk = example.random_walk(3, 4)
-#random_walk_prob = example.random_walk_probabilities(3, 4)
-#print("Random Walk", random_walk)
-#print("Prob")
-#print(random_walk_prob[0])
-#print("site visits")
-#print(random_walk_prob[1])
-#green = example.greens_function(3, 4)
-#print("greens")
-#print(green)
-#phi_greens = example.potential_via_greens(3, 4)
-#print("phi_greens")
-#print(phi_greens[0])
-#print(phi_greens[1])
-#print(phi_greens[2])
-#print(phi_greens[3])
-#print(example.compute_potential_at_point(24, 24))
-#print(example.get_potential(5, 5))
-#example.plot_phi()
-
-
-
-
-
-
-
-
-
-
-
-
-# Recording the end time of the code, and taking the difference from the start time to find how
-# long the code took to run. This allows for comparison of runtimes for varying number of
-# processors. Getting an estimate of the parallel efficiency of the code.
-#if rank==0:
-#end_time = time.time()
-#execution_time = end_time - start_time
-#print(f"The code took {execution_time} seconds to run for 1 processor")
-
-# If running using 8 processors, it might be beneficial to comment out the MPI.Finalize() command
-# below. For an unknown reason, the runtime increases significantly: using a sample size of
-# no_of_samples = 100000000/no_of_ranks, the runtime jumps from ~21 seconds to ~80 seconds with an
-# uncommented MPI.Finalize().
-#MPI.Finalize()
