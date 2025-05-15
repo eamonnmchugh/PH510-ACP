@@ -32,6 +32,7 @@ start_time = time.time()
 # ranks.
 # no_of_samples = np.int32(100000000/no_of_ranks)
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 class PoissonSolver2D:
     """
@@ -92,6 +93,26 @@ class PoissonSolver2D:
             self.fixed_potentials.add((i, self.n - 1))  # Right
 
         return self.phi
+
+    def apply_charge_distribution(self, distribution_type):
+        """
+        
+        """
+        x = np.linspace(0, self.l, self.n)
+        y = np.linspace(0, self.l, self.n)
+        x, y = np.meshgrid(x, y, indexing='ij')
+
+        if distribution_type == 'uniform_10C':
+            self.f[:, :] = 10
+
+        elif distribution_type == 'linear_gradient_top_to_bottom':
+            for i in range(self.n):
+                self.f[i, :] = 1 - (i/(self.n - 1))
+
+        elif distribution_type == 'exp_decay':
+            x0, y0 = self.l/2
+            r = np.sqrt((x - x0)**2 + (y - y0)**2)
+            self.f[:, :] = np.exp(-2000 * r)
 
     def overrelax(self, max_iter=10000, tol=1e-10):
         """
@@ -235,69 +256,89 @@ class PoissonSolver2D:
         green_charge = np.zeros((self.n, self.n))
         i, j = starting_point_i, starting_point_j
         site_visits = self.random_walk_probabilities(i, j)[1]
-        for p in range(1, self.n - 1):
-            for q in range(1, self.n - 1): 
+        for p in range(0, self.n):
+            for q in range(0, self.n): 
                 green_charge[p, q] = self.h**2/num_walkers * site_visits[p, q]
         return green_charge
 
-#    def potential_via_greens(self, starting_point_i, starting_point_j, num_walkers=100000):
-#        """
-#        filler
-#        """
-#       total = 0.0
-#        i, j = starting_point_i, starting_point_j
-#        greens_laplace = self.random_walk_probabilities(i, j)[0]
-#        site_visits = self.random_walk_probabilities(i, j)[1]
-#        for p in range(1, self.n - 1):
-#            for q in range(1, self.n - 1):
-#                if self.f[p, q] == 0:
-#                   continue
-#                green_charge = self.h**2/num_walkers * np.sum(site_visits[p, q])
-#                green_charge[p, q] = self.h**2/num_walkers * site_visits[p, q]
-#        term1 = np.sum(greens_laplace[i, j] * self.phi[])
-#        term2 = np.sum(green_charge * self.f[p, q])
-#        phi_greens = term1 + term2
-#                green_val, _ = self.random_walk_green(r_target_i, r_target_j, num_walks_per_point)
-#                total += green_val * self.f[i, j] * self.h**2
-#        return phi_greens
-
-    def plot_phi(self):
+    def potential_via_greens(self, starting_point_i, starting_point_j, num_walkers=100000):
         """
         
         """
+        i, j = starting_point_i, starting_point_j
+        greens_laplace = self.random_walk_probabilities(i, j)[0]
+        term1 = np.zeros((self.n, self.n))
+        for x_b in range(0, self.n):
+            for y_b in range(0, self.n):
+                if self.boundary_check(x_b, y_b):
+                    term1[x_b, y_b] = greens_laplace[x_b, y_b] * self.phi[x_b, y_b]
+        term1_sum = np.sum(term1)
+        term2 = np.sum(self.greens_function(i, j) * self.f)
+        phi_greens = term1_sum + term2
+        return phi_greens, greens_laplace, self.phi, term1, term2
+
+    def plot_value(self, value, title, decimal_places):
+        """
+        
+        """
+        plt.figure()
         extent = [0, self.l * 100, 0, self.l * 100]  # convert to cm
-        plt.imshow(np.round(self.phi, 4), origin='lower', extent=extent, cmap='viridis')
-#        plt.imshow(np.round(self.phi, 4), origin='lower', extent=extent, cmap='inferno')
+        plt.imshow(np.round(value, decimal_places), origin='lower', extent=extent, cmap='viridis')
+#        plt.imshow(np.round(self.phi, decimal_places), origin='lower', extent=extent, cmap='inferno')
         plt.colorbar(label='Potential (V)')
-        plt.title("Potential Distribution")
+        plt.title(title)
         plt.xlabel("x (cm)")
         plt.ylabel("y (cm)")
         plt.grid(False)
         plt.show()
 
-# Example usage
-example = PoissonSolver2D(0.10, 9)
-phi, f = example.phi, example.f
-phi = example.set_boundary_conditions('tb1_lr-1')
+# Question 3
+init_grid = PoissonSolver2D(0.10, 101)
+phi, f = init_grid.phi, init_grid.f
+print("Green's function evaluation for a square grid of side length 10cm:")
+
+# (a)
+a = init_grid.random_walk_probabilities(50, 50)
+print(f"At centre point (5cm, 5cm):\n{a[0]}")
+
+# (b)
+b = init_grid.random_walk_probabilities(25, 25)
+print(f"At (2.5cm, 2.5cm):\n{b[0]}")
+
+# (c)
+c = init_grid.random_walk_probabilities(1, 25)
+print(f"At (0.1cm, 2.5cm):\n{c[0]}")
+
+# (d)
+d = init_grid.random_walk_probabilities(1, 1)
+print(f"At (0.1cm, 0.1cm):\n{d[0]}")
+
+# 0.05 / init_grid.h
+#phi = example.set_boundary_conditions('tb1_lr-1')
 #phi = example.set_potential(4, 4, 0)
 #phi = example.set_potential(20, 30, 2)
 #phi = example.set_potential(25, 25, 0)
-print(phi)
-phi = example.overrelax()
-random_walk = example.random_walk(4, 4)
-random_walk_prob = example.random_walk_probabilities(4, 4)
-print("Random Walk", random_walk)
-print("Prob")
-print(random_walk_prob[0])
-print("site visits")
-print(random_walk_prob[1])
-green = example.greens_function(4, 4)
-print("greens")
-print(green)
+#print(phi)
+#phi = example.overrelax()
+#random_walk = example.random_walk(3, 4)
+#random_walk_prob = example.random_walk_probabilities(3, 4)
+#print("Random Walk", random_walk)
+#print("Prob")
+#print(random_walk_prob[0])
+#print("site visits")
+#print(random_walk_prob[1])
+#green = example.greens_function(3, 4)
+#print("greens")
+#print(green)
+#phi_greens = example.potential_via_greens(3, 4)
+#print("phi_greens")
+#print(phi_greens[0])
+#print(phi_greens[1])
+#print(phi_greens[2])
+#print(phi_greens[3])
 #print(example.compute_potential_at_point(24, 24))
 #print(example.get_potential(5, 5))
 #example.plot_phi()
-
 
 
 
