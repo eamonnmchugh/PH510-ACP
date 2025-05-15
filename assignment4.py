@@ -3,300 +3,385 @@
 """
 This code is suitably licensed:
 https://github.com/eamonnmchugh/PH510-ACP/blob/Assignment-4/MIT%20Licence
+
+This program makes use of Monte Carlo simulations to find the estimate for a given function. Monte 
+Carlo simulations are used to simplify complex integrations through repeated random sampling. This 
+is done by finding the average value of the function across a specified range. This expectation 
+value is then multiplied by the range, which approximates the integral of the function. Finally, 
+the function's variance can be found to obtain the uncertainty in the integral's estimate.
+
+In this case, the Monte Carlo is ran for the class 'PoissonSolver2D'. This class generates an NxN
+grid of points whose potentials and charges can be manually set. after applying these charges and
+potentials, and over-relaxing until the grid is in a state of equilibrium, random walkers are used
+by freely moving throughout the grid starting at a point (i, j) until they reach a boundary
+(x_b, y_b), at which point the potential is recorded. After repeated use of these walkers, a
+probability map (Green's function) is generated, giving us an estimate of the potential at the
+starting point.
 """
 
-import random
 import time
 import numpy as np
-import matplotlib.pyplot as plt
-#from mpi4py import MPI
-#from monte_carlo import MonteCarlo
+from mpi4py import MPI
+from monte_carlo import MonteCarlo
+from poisson_solver import PoissonSolver2D
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Initialising the MPI environment and drawing key information from it. The number of ranks allows
 # us to know how many processors are being used, which allows for equal distribtuion of the
 # workload between the processors.
-#comm = MPI.COMM_WORLD
-#no_of_ranks = comm.Get_size()
-#rank = comm.Get_rank()
+comm = MPI.COMM_WORLD
+no_of_ranks = comm.Get_size()
+rank = comm.Get_rank()
 
 # Recording the start time of the code
-#if rank==0:
-#    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-#    print(f"{no_of_ranks} Processors:")
-#    print()
-#    start_time = time.time()
+if rank==0:
+    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+    print(f"{no_of_ranks} Processors:")
+    print()
+    start_time = time.time()
+
+
 
 # Setting the number of samples to be inversely proportional to the number of ranks. Each rank runs
 # the set number of samples, meaning the total number of samples used is equal for all number of
 # ranks.
-# no_of_samples = np.int32(100000000/no_of_ranks)
+no_of_samples = np.int32(100000/no_of_ranks)
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Question 3
+if rank==0:
+    print("Exercise 3")
+    print("Green's function evaluation for a square grid of side length 10cm:")
+init_grid = PoissonSolver2D(0.10, 21, no_of_samples)
 
-class PoissonSolver2D:
-    """
-    
-    """
-    def __init__(self, length, number_of_points, no_of_samples):
-        self.l = length  # physical length in meters
-        self.n = number_of_points  # number of grid points
-        self.h = self.l / (self.n - 1)
-        self.phi = np.random.uniform(0, 10, (self.n, self.n))
-        self.f = np.zeros((self.n, self.n))
-        self.fixed_potentials = set()
-        self.fixed_charges = set()
-        self.d = 2
-        self.no_of_samples = no_of_samples
+# (a)
+A_MONTE = MonteCarlo(init_grid, init_grid.greens_function, -1, 1, 10, 10)
+A_CALC = A_MONTE.parallelisation_array()
+#init_grid.plot_value(A_CALC[1], "Green's Function At (5cm, 5cm)", 4)
+#init_grid.plot_value(init_grid.site_visits, 'Number of Site Visits At (5cm, 5cm)', 4)
 
-    def set_potential(self, x, y, potential):
-        """
-        Set the potential at grid point (x, y).
-        
-        :param x: Row index (0 <= x < N)
-        :param y: Column index (0 <= y < N)
-        :param potential: The potential to set at (x, y)
-        """
-        if 0 <= x < self.n and 0 <= y < self.n:
-            self.phi[x, y] = potential
-            self.fixed_potentials.add((x, y))
-        else:
-            raise ValueError(f"Invalid coordinates: ({x}, {y}) outside grid bounds.")
-        return self.phi
+# (b)
+B_MONTE = MonteCarlo(init_grid, init_grid.greens_function, -1, 1, 5, 5)
+B_CALC = B_MONTE.parallelisation_array()
+#init_grid.plot_value(B_CALC[1], "Green's Function At (2.5cm, 2.5cm)", 4)
+#init_grid.plot_value(init_grid.site_visits, 'Number of Site Visits At (2.5cm, 2.5cm)', 4)
 
-    def set_boundary_conditions(self, bc_type):
-        """
-        Applying different preset boundary conditions
-        """
-        if bc_type == 'all_1V':
-            self.phi[-1, :] = 1  # Top
-            self.phi[0, :] = 1   # Bottom
-            self.phi[:, 0] = 1   # Left
-            self.phi[:, -1] = 1  # Right
-        elif bc_type == 'tb1_lr-1':
-            self.phi[-1, :] = 1
-            self.phi[0, :] = 1
-            self.phi[:, 0] = -1
-            self.phi[:, -1] = -1
-        elif bc_type == 'tl2_b0_r-4':
-            self.phi[-1, :] = 2
-            self.phi[0, :] = 0
-            self.phi[:, 0] = 2
-            self.phi[:, -1] = -4
-        else:
-            raise ValueError(f"Unknown boundary condition type: {bc_type}")
+# (c)
+C_MONTE = MonteCarlo(init_grid, init_grid.greens_function, -1, 1, 1, 5)
+C_CALC = C_MONTE.parallelisation_array()
+#init_grid.plot_value(C_CALC[1], "Green's Function At (0.1cm, 2.5cm)", 4)
+#init_grid.plot_value(init_grid.site_visits, 'Number of Site Visits At (0.1cm, 2.5cm)', 4)
 
-        # Add boundary points to fixed_potentials set
-        for i in range(self.n):
-            self.fixed_potentials.add((self.n - 1, i))  # Top
-            self.fixed_potentials.add((0, i))           # Bottom
-            self.fixed_potentials.add((i, 0))           # Left
-            self.fixed_potentials.add((i, self.n - 1))  # Right
+# (d)
+D_MONTE = MonteCarlo(init_grid, init_grid.greens_function, -1, 1, 1, 1)
+D_CALC = D_MONTE.parallelisation_array()
+#init_grid.plot_value(D_CALC[1], "Green's Function At (0.1cm, 0.1cm)", 4)
+#init_grid.plot_value(init_grid.site_visits, 'Number of Site Visits At (0.1cm, 0.1cm)', 4)
+if rank==0:
+    print(f"At centre point (5cm, 5cm):\n{A_CALC[1]}")
+    print(f"At (2.5cm, 2.5cm):\n{B_CALC[1]}")
+    print(f"At (0.1cm, 2.5cm):\n{C_CALC[1]}")
+    print(f"At (0.1cm, 0.1cm):\n{D_CALC[1]}")
+    print()
 
-        return self.phi
+# Question 4
+    print("Exercise 4")
+    print("Potential calculation via Green's function for a square grid of side length 10cm:")
 
-    def apply_charge_distribution(self, distribution_type):
-        """
-        
-        """
-        x = np.linspace(0, self.l, self.n)
-        y = np.linspace(0, self.l, self.n)
-        x, y = np.meshgrid(x, y, indexing='ij')
+# (a)
+    print("a) with boundary conditions: All edges uniformly at +1V")
+init_grid = PoissonSolver2D(0.10, 21, no_of_samples)
 
-        if distribution_type == 'uniform_10C':
-            self.f[:, :] = 10
+phi_1 = init_grid.phi
+phi_1 = init_grid.set_boundary_conditions('all_1V')
+phi_1 = init_grid.overrelax()
+POTENTIAL_50_50_4A = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 10, 10)
+POTENTIAL_50_50_4A_CALC = POTENTIAL_50_50_4A.parallelisation()
+POTENTIAL_25_25_4A = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 5, 5)
+POTENTIAL_25_25_4A_CALC = POTENTIAL_25_25_4A.parallelisation()
+POTENTIAL_1_25_4A = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 1, 5)
+POTENTIAL_1_25_4A_CALC = POTENTIAL_1_25_4A.parallelisation()
+POTENTIAL_1_1_4A = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 1, 1)
+POTENTIAL_1_1_4A_CALC = POTENTIAL_1_1_4A.parallelisation()
+if rank==0:
+    print(f"At (5cm, 5cm): {POTENTIAL_50_50_4A_CALC[1]:.4f}V")
+    print(f"At (2.5cm, 2.5cm): {POTENTIAL_25_25_4A_CALC[1]:.4f}V")
+    print(f"At (0.1cm, 2.5cm): {POTENTIAL_1_25_4A_CALC[1]:.4f}V")
+    print(f"At (0.1cm, 0.1cm): {POTENTIAL_1_1_4A_CALC[1]:.4f}V")
+    print()
 
-        elif distribution_type == 'linear_gradient_top_to_bottom':
-            for i in range(self.n):
-                self.f[i, :] = 1 - (i/(self.n - 1))
+# (b)
+    print("b) with boundary conditions: Top and bottom edges: +1V, left and right edges: -1V")
+init_grid = PoissonSolver2D(0.10, 21, no_of_samples)
 
-        elif distribution_type == 'exp_decay':
-            x0, y0 = self.l/2, self.l/2
-            r = np.sqrt((x - x0)**2 + (y - y0)**2)
-            self.f[:, :] = np.exp(-2000 * np.abs(r))
-        return self.f
+phi_2 = init_grid.phi
+phi_2 = init_grid.set_boundary_conditions('tb1_lr-1')
+phi_2 = init_grid.overrelax()
+POTENTIAL_50_50_4B = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 10, 10)
+POTENTIAL_50_50_4B_CALC = POTENTIAL_50_50_4B.parallelisation()
+POTENTIAL_25_25_4B = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 5, 5)
+POTENTIAL_25_25_4B_CALC = POTENTIAL_25_25_4B.parallelisation()
+POTENTIAL_1_25_4B = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 1, 5)
+POTENTIAL_1_25_4B_CALC = POTENTIAL_1_25_4B.parallelisation()
+POTENTIAL_1_1_4B = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 1, 1)
+POTENTIAL_1_1_4B_CALC = POTENTIAL_1_1_4B.parallelisation()
+if rank==0:
+    print(f"At (5cm, 5cm): {POTENTIAL_50_50_4B_CALC[1]:.4f}V")
+    print(f"At (2.5cm, 2.5cm): {POTENTIAL_25_25_4B_CALC[1]:.4f}V")
+    print(f"At (0.1cm, 2.5cm): {POTENTIAL_1_25_4B_CALC[1]:.4f}V")
+    print(f"At (0.1cm, 0.1cm): {POTENTIAL_1_1_4B_CALC[1]:.4f}V")
+    print()
 
-    def overrelax(self, max_iter=10000, tol=1e-10):
-        """
-        Update the potential at each point to be the average of its neighboring points. Fixed
-        potentials (those set by the user) remain unchanged. Boundary points (i.e., points where
-        i=0 or i=N-1 or j=0 or j=N-1) will only average neighboring points within the grid. This is
-        run iteratively until equilibrium is reached. The process stops when the maximum change in
-        potentials between two consecutive iterations is smaller than the specified tolerance, or
-        when the maximum number of iterations is reached.
-        """
-        omega = 2/(1 + np.sin(np.pi/self.n))
-        for iteration in range(max_iter):
-            max_delta = 0
-            for i in range(0, self.n):
-                for j in range(0, self.n):
-                    if (i, j) in self.fixed_potentials:
-                        continue
+# (c)
+    print("c) with boundary conditions: Top and left edges: +2V, bottom edge: 0V, right edge: -4V")
+init_grid = PoissonSolver2D(0.10, 21, no_of_samples)
 
-                    # Collect the neighboring points within the grid for averaging
-                    neighboring_potentials = []
+phi_3 = init_grid.phi
+phi_3 = init_grid.set_boundary_conditions('tl2_b0_r-4')
+phi_3 = init_grid.overrelax()
+POTENTIAL_50_50_4C = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 10, 10)
+POTENTIAL_50_50_4C_CALC = POTENTIAL_50_50_4C.parallelisation()
+POTENTIAL_25_25_4C = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 5, 5)
+POTENTIAL_25_25_4C_CALC = POTENTIAL_25_25_4C.parallelisation()
+POTENTIAL_1_25_4C = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 1, 5)
+POTENTIAL_1_25_4C_CALC = POTENTIAL_1_25_4C.parallelisation()
+POTENTIAL_1_1_4C = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 1, 1)
+POTENTIAL_1_1_4C_CALC = POTENTIAL_1_1_4C.parallelisation()
+if rank==0:
+    print(f"At (5cm, 5cm): {POTENTIAL_50_50_4C_CALC[1]:.4f}V")
+    print(f"At (2.5cm, 2.5cm): {POTENTIAL_25_25_4C_CALC[1]:.4f}V")
+    print(f"At (0.1cm, 2.5cm): {POTENTIAL_1_25_4C_CALC[1]:.4f}V")
+    print(f"At (0.1cm, 0.1cm): {POTENTIAL_1_1_4C_CALC[1]:.4f}V")
+    print()
 
-                    # Check if the neighbor (i+1, j) is within bounds
-                    if i + 1 < self.n:
-                        neighboring_potentials.append(self.phi[i+1, j])
 
-                    # Check if the neighbor (i-1, j) is within bounds
-                    if i - 1 >= 0:
-                        neighboring_potentials.append(self.phi[i-1, j])
+# (d)
+    print("d) Repeat, with uniform charge of 10C throughout the grid")
 
-                    # Check if the neighbor (i, j+1) is within bounds
-                    if j + 1 < self.n:
-                        neighboring_potentials.append(self.phi[i, j+1])
+# (i)
+    print("i) with BC: All edges uniformly at +1V")
+init_grid = PoissonSolver2D(0.10, 21, no_of_samples)
 
-                    # Check if the neighbor (i, j-1) is within bounds
-                    if j - 1 >= 0:
-                        neighboring_potentials.append(self.phi[i, j-1])
+phi_4 = init_grid.phi
+phi_4 = init_grid.set_boundary_conditions('all_1V')
+phi_4 = init_grid.overrelax()
+f_4 = init_grid.apply_charge_distribution('uniform_10C')
+POTENTIAL_50_50_4DI = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 10, 10)
+POTENTIAL_50_50_4DI_CALC = POTENTIAL_50_50_4DI.parallelisation()
+POTENTIAL_25_25_4DI = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 5, 5)
+POTENTIAL_25_25_4DI_CALC = POTENTIAL_25_25_4DI.parallelisation()
+POTENTIAL_1_25_4DI = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 1, 5)
+POTENTIAL_1_25_4DI_CALC = POTENTIAL_1_25_4DI.parallelisation()
+POTENTIAL_1_1_4DI = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 1, 1)
+POTENTIAL_1_1_4DI_CALC = POTENTIAL_1_1_4DI.parallelisation()
+if rank==0:
+    print(f"At (5cm, 5cm): {POTENTIAL_50_50_4DI_CALC[1]:.4f}V")
+    print(f"At (2.5cm, 2.5cm): {POTENTIAL_25_25_4DI_CALC[1]:.4f}V")
+    print(f"At (0.1cm, 2.5cm): {POTENTIAL_1_25_4DI_CALC[1]:.4f}V")
+    print(f"At (0.1cm, 0.1cm): {POTENTIAL_1_1_4DI_CALC[1]:.4f}V")
+    print()
 
-                    old_phi = self.phi[i, j]
-                    rhs = (0.25 * self.h**2 * self.f[i, j]) + np.mean(neighboring_potentials)
-                    self.phi[i,j] = (omega * rhs) + ((1 - omega) * old_phi)
-                    max_delta = max(max_delta, abs(self.phi[i,j] - old_phi))
-            if max_delta < tol:
-#                print(f"Over-relaxation method took {iteration} iterations before converging.")
-#                print(np.round(self.phi, 2))
-                break
-        else:
-            print(f"Maximum iterations ({max_iter}) reached without equilibrium.")
-        return self.phi
+# (ii)
+    print("ii) with BC: Top and bottom edges: +1V, left and right edges: -1V")
+init_grid = PoissonSolver2D(0.10, 21, no_of_samples)
 
-    def boundary_check(self, i, j):
-        """
-        
-        """
-        return i == 0 or j == 0 or i == self.n - 1 or j == self.n - 1
+phi_5 = init_grid.phi
+phi_5 = init_grid.set_boundary_conditions('tb1_lr-1')
+phi_5 = init_grid.overrelax()
+f_5 = init_grid.apply_charge_distribution('uniform_10C')
+POTENTIAL_50_50_4DII = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 10, 10)
+POTENTIAL_50_50_4DII_CALC = POTENTIAL_50_50_4DII.parallelisation()
+POTENTIAL_25_25_4DII = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 5, 5)
+POTENTIAL_25_25_4DII_CALC = POTENTIAL_25_25_4DII.parallelisation()
+POTENTIAL_1_25_4DII = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 1, 5)
+POTENTIAL_1_25_4DII_CALC = POTENTIAL_1_25_4DII.parallelisation()
+POTENTIAL_1_1_4DII = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 1, 1)
+POTENTIAL_1_1_4DII_CALC = POTENTIAL_1_1_4DII.parallelisation()
+if rank==0:
+    print(f"At (5cm, 5cm): {POTENTIAL_50_50_4DII_CALC[1]:.4f}V")
+    print(f"At (2.5cm, 2.5cm): {POTENTIAL_25_25_4DII_CALC[1]:.4f}V")
+    print(f"At (0.1cm, 2.5cm): {POTENTIAL_1_25_4DII_CALC[1]:.4f}V")
+    print(f"At (0.1cm, 0.1cm): {POTENTIAL_1_1_4DII_CALC[1]:.4f}V")
+    print()
 
-    def random_walk(self, starting_point_i, starting_point_j):
-        """
-        Simulates random walkers starting at (starting_point_i, starting_point_j),
-        and returns the empirical probabilities of reaching each boundary point.
+# (iii)
+    print("iii) with BC: Top and left edges: +2V, bottom edge: 0V, right edge: -4V")
+init_grid = PoissonSolver2D(0.10, 21, no_of_samples)
 
-        :param starting_point_i: Starting row index
-        :param starting_point_j: Starting column index
-        :param num_walkers: Number of random walkers to simulate
-        :return: A dictionary {(x, y): probability} for each boundary point (x, y)
-        """
-        values = []
-        for k in range(self.no_of_samples):
-            i, j = starting_point_i, starting_point_j
-            while not self.boundary_check(i, j):
-                direction = random.choice(['up', 'down', 'left', 'right'])
-                if direction == 'up':
-                    i += 1
-                elif direction == 'down':
-                    i -= 1
-                elif direction == 'left':
-                    j -= 1
-                elif direction == 'right':
-                    j += 1
-            if self.boundary_check(i, j):
-                values.append(self.phi[i, j])
-        return np.mean(values)
+phi_6 = init_grid.phi
+phi_6 = init_grid.set_boundary_conditions('tl2_b0_r-4')
+phi_6 = init_grid.overrelax()
+f_6 = init_grid.apply_charge_distribution('uniform_10C')
+POTENTIAL_50_50_4DIII = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 10, 10)
+POTENTIAL_50_50_4DIII_CALC = POTENTIAL_50_50_4DIII.parallelisation()
+POTENTIAL_25_25_4DIII = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 5, 5)
+POTENTIAL_25_25_4DIII_CALC = POTENTIAL_25_25_4DIII.parallelisation()
+POTENTIAL_1_25_4DIII = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 1, 5)
+POTENTIAL_1_25_4DIII_CALC = POTENTIAL_1_25_4DIII.parallelisation()
+POTENTIAL_1_1_4DIII = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 1, 1)
+POTENTIAL_1_1_4DIII_CALC = POTENTIAL_1_1_4DIII.parallelisation()
+if rank==0:
+    print(f"At (5cm, 5cm): {POTENTIAL_50_50_4DIII_CALC[1]:.4f}V")
+    print(f"At (2.5cm, 2.5cm): {POTENTIAL_25_25_4DIII_CALC[1]:.4f}V")
+    print(f"At (0.1cm, 2.5cm): {POTENTIAL_1_25_4DIII_CALC[1]:.4f}V")
+    print(f"At (0.1cm, 0.1cm): {POTENTIAL_1_1_4DIII_CALC[1]:.4f}V")
+    print()
 
-    def random_walk_probabilities(self, starting_point_i, starting_point_j):
-        """
-        Simulates random walkers starting at (starting_point_i, starting_point_j),
-        and returns the empirical probabilities of reaching each boundary point.
+# (e)
+    print("e) Repeat, with uniform charge gradient from 1C at top to 0C at bottom")
 
-        :param starting_point_i: Starting row index
-        :param starting_point_j: Starting column index
-        :param num_walkers: Number of random walkers to simulate
-        :return: A dictionary {(x, y): probability} for each boundary point (x, y)
-        """
-        prob_grid = np.zeros((self.n, self.n))
-        self.site_visits = np.zeros((self.n, self.n))
-        boundary_hits = {}
+# (i)
+    print("i) with BC: All edges uniformly at +1V")
+init_grid = PoissonSolver2D(0.10, 21, no_of_samples)
 
-        # Initialize count for each boundary point
-        for i in range(self.n):
-            boundary_hits[(0, i)] = 0           # Bottom
-            boundary_hits[(self.n - 1, i)] = 0  # Top
-            boundary_hits[(i, 0)] = 0           # Left
-            boundary_hits[(i, self.n - 1)] = 0  # Right
+phi_7 = init_grid.phi
+phi_7 = init_grid.set_boundary_conditions('all_1V')
+phi_7 = init_grid.overrelax()
+f_7 = init_grid.apply_charge_distribution('linear_gradient_top_to_bottom')
+POTENTIAL_50_50_4EI = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 10, 10)
+POTENTIAL_50_50_4EI_CALC = POTENTIAL_50_50_4EI.parallelisation()
+POTENTIAL_25_25_4EI = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 5, 5)
+POTENTIAL_25_25_4EI_CALC = POTENTIAL_25_25_4EI.parallelisation()
+POTENTIAL_1_25_4EI = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 1, 5)
+POTENTIAL_1_25_4EI_CALC = POTENTIAL_1_25_4EI.parallelisation()
+POTENTIAL_1_1_4EI = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 1, 1)
+POTENTIAL_1_1_4EI_CALC = POTENTIAL_1_1_4EI.parallelisation()
+if rank==0:
+    print(f"At (5cm, 5cm): {POTENTIAL_50_50_4EI_CALC[1]:.4f}V")
+    print(f"At (2.5cm, 2.5cm): {POTENTIAL_25_25_4EI_CALC[1]:.4f}V")
+    print(f"At (0.1cm, 2.5cm): {POTENTIAL_1_25_4EI_CALC[1]:.4f}V")
+    print(f"At (0.1cm, 0.1cm): {POTENTIAL_1_1_4EI_CALC[1]:.4f}V")
+    print()
 
-        for k in range(self.no_of_samples):
-            i, j = starting_point_i, starting_point_j
-            while not self.boundary_check(i, j):
-                self.site_visits[(i, j)] += 1
-                direction = random.choice(['up', 'down', 'left', 'right'])
-                if direction == 'up':
-                    i += 1
-                elif direction == 'down':
-                    i -= 1
-                elif direction == 'left':
-                    j -= 1
-                elif direction == 'right':
-                    j += 1
-#                self.site_visits[(i, j)] += 1
-            boundary_hits[(i, j)] += 1
+# (ii)
+    print("ii) with BC: Top and bottom edges: +1V, left and right edges: -1V")
+init_grid = PoissonSolver2D(0.10, 21, no_of_samples)
 
-        # Fill the 2D probability grid
-        for (i, j), count in boundary_hits.items():
-            prob_grid[i, j] = count / self.no_of_samples
-        return prob_grid
+phi_8 = init_grid.phi
+phi_8 = init_grid.set_boundary_conditions('tb1_lr-1')
+phi_8 = init_grid.overrelax()
+f_8 = init_grid.apply_charge_distribution('linear_gradient_top_to_bottom')
+POTENTIAL_50_50_4EII = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 10, 10)
+POTENTIAL_50_50_4EII_CALC = POTENTIAL_50_50_4EII.parallelisation()
+POTENTIAL_25_25_4EII = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 5, 5)
+POTENTIAL_25_25_4EII_CALC = POTENTIAL_25_25_4EII.parallelisation()
+POTENTIAL_1_25_4EII = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 1, 5)
+POTENTIAL_1_25_4EII_CALC = POTENTIAL_1_25_4EII.parallelisation()
+POTENTIAL_1_1_4EII = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 1, 1)
+POTENTIAL_1_1_4EII_CALC = POTENTIAL_1_1_4EII.parallelisation()
+if rank==0:
+    print(f"At (5cm, 5cm): {POTENTIAL_50_50_4EII_CALC[1]:.4f}V")
+    print(f"At (2.5cm, 2.5cm): {POTENTIAL_25_25_4EII_CALC[1]:.4f}V")
+    print(f"At (0.1cm, 2.5cm): {POTENTIAL_1_25_4EII_CALC[1]:.4f}V")
+    print(f"At (0.1cm, 0.1cm): {POTENTIAL_1_1_4EII_CALC[1]:.4f}V")
+    print()
 
-    def get_potential(self, x, y):
-        """
-        Get the potential at the grid point (x, y).
-        
-        :param x: Row index (0 <= x < N)
-        :param y: Column index (0 <= y < N)
-        :return: potential at point (x, y)
-        """
-        if 0 <= x < self.n and 0 <= y < self.n:
-            return self.phi[x, y]
-        else:
-            raise ValueError(f"Invalid coordinates: ({x}, {y}) outside grid bounds.")
+# (iii)
+    print("iii) with BC: Top and left edges: +2V, bottom edge: 0V, right edge: -4V")
+init_grid = PoissonSolver2D(0.10, 21, no_of_samples)
 
-    def greens_charge(self, starting_point_i, starting_point_j):
-        """
-        
-        """
-        green_charge = np.zeros((self.n, self.n))
-        i, j = starting_point_i, starting_point_j
-        for p in range(0, self.n):
-            for q in range(0, self.n): 
-                green_charge[p, q] = self.h**2/self.no_of_samples * self.site_visits[p, q]
-        return green_charge
+phi_9 = init_grid.phi
+phi_9 = init_grid.set_boundary_conditions('tl2_b0_r-4')
+phi_9 = init_grid.overrelax()
+f_9 = init_grid.apply_charge_distribution('linear_gradient_top_to_bottom')
+POTENTIAL_50_50_4EIII = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 10, 10)
+POTENTIAL_50_50_4EIII_CALC = POTENTIAL_50_50_4EIII.parallelisation()
+POTENTIAL_25_25_4EIII = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 5, 5)
+POTENTIAL_25_25_4EIII_CALC = POTENTIAL_25_25_4EIII.parallelisation()
+POTENTIAL_1_25_4EIII = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 1, 5)
+POTENTIAL_1_25_4EIII_CALC = POTENTIAL_1_25_4EIII.parallelisation()
+POTENTIAL_1_1_4EIII = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 1, 1)
+POTENTIAL_1_1_4EIII_CALC = POTENTIAL_1_1_4EIII.parallelisation()
+if rank==0:
+    print(f"At (5cm, 5cm): {POTENTIAL_50_50_4EIII_CALC[1]:.4f}V")
+    print(f"At (2.5cm, 2.5cm): {POTENTIAL_25_25_4EIII_CALC[1]:.4f}V")
+    print(f"At (0.1cm, 2.5cm): {POTENTIAL_1_25_4EIII_CALC[1]:.4f}V")
+    print(f"At (0.1cm, 0.1cm): {POTENTIAL_1_1_4EIII_CALC[1]:.4f}V")
+    print()
 
-    def greens_function(self, starting_point_i, starting_point_j):
-        """
-        
-        """
-        i, j = starting_point_i, starting_point_j
-        return self.random_walk_probabilities(i, j) + self.greens_charge(i, j)
+# (f)
+    print("f) Repeat, with exponentially decaying charge exp(-2000|r|) placed at centre of grid")
 
-    def potential_via_greens(self, starting_point_i, starting_point_j):
-        """
-        
-        """
-        i, j = starting_point_i, starting_point_j
-        greens_laplace = self.random_walk_probabilities(i, j)
-        term1 = np.zeros((self.n, self.n))
-        for x_b in range(0, self.n):
-            for y_b in range(0, self.n):
-                if self.boundary_check(x_b, y_b):
-                    term1[x_b, y_b] = greens_laplace[x_b, y_b] * self.phi[x_b, y_b]
-        term1_sum = np.sum(term1)
-        term2 = np.sum(self.greens_charge(i, j) * self.f)
-        phi_greens = term1_sum + term2
-        return phi_greens
+# (i)
+    print("i) with BC: All edges uniformly at +1V")
+init_grid = PoissonSolver2D(0.10, 21, no_of_samples)
 
-    def plot_value(self, value, title, decimal_places):
-        """
-        
-        """
-        plt.figure()
-        extent = [0, self.l * 100, 0, self.l * 100]  # convert to cm
-        plt.imshow(np.round(value, decimal_places), origin='lower', extent=extent, cmap='viridis')
-#        plt.imshow(np.round(self.phi, decimal_places), origin='lower', extent=extent, cmap='inferno')
-        plt.colorbar(label='Potential (V)')
-        plt.title(title)
-        plt.xlabel("x (cm)")
-        plt.ylabel("y (cm)")
-        plt.grid(False)
-        plt.show()
+phi_10 = init_grid.phi
+phi_10 = init_grid.set_boundary_conditions('all_1V')
+phi_10 = init_grid.overrelax()
+f_10 = init_grid.apply_charge_distribution('exp_decay')
+POTENTIAL_50_50_4FI = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 10, 10)
+POTENTIAL_50_50_4FI_CALC = POTENTIAL_50_50_4FI.parallelisation()
+POTENTIAL_25_25_4FI = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 5, 5)
+POTENTIAL_25_25_4FI_CALC = POTENTIAL_25_25_4FI.parallelisation()
+POTENTIAL_1_25_4FI = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 1, 5)
+POTENTIAL_1_25_4FI_CALC = POTENTIAL_1_25_4FI.parallelisation()
+POTENTIAL_1_1_4FI = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 1, 1)
+POTENTIAL_1_1_4FI_CALC = POTENTIAL_1_1_4FI.parallelisation()
+if rank==0:
+    print(f"At (5cm, 5cm): {POTENTIAL_50_50_4FI_CALC[1]:.4f}V")
+    print(f"At (2.5cm, 2.5cm): {POTENTIAL_25_25_4FI_CALC[1]:.4f}V")
+    print(f"At (0.1cm, 2.5cm): {POTENTIAL_1_25_4FI_CALC[1]:.4f}V")
+    print(f"At (0.1cm, 0.1cm): {POTENTIAL_1_1_4FI_CALC[1]:.4f}V")
+    print()
+
+# (ii)
+    print("ii) with BC: Top and bottom edges: +1V, left and right edges: -1V")
+init_grid = PoissonSolver2D(0.10, 21, no_of_samples)
+
+phi_11 = init_grid.phi
+phi_11 = init_grid.set_boundary_conditions('tb1_lr-1')
+phi_11 = init_grid.overrelax()
+f_11 = init_grid.apply_charge_distribution('exp_decay')
+POTENTIAL_50_50_4FII = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 10, 10)
+POTENTIAL_50_50_4FII_CALC = POTENTIAL_50_50_4FII.parallelisation()
+POTENTIAL_25_25_4FII = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 5, 5)
+POTENTIAL_25_25_4FII_CALC = POTENTIAL_25_25_4FII.parallelisation()
+POTENTIAL_1_25_4FII = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 1, 5)
+POTENTIAL_1_25_4FII_CALC = POTENTIAL_1_25_4FII.parallelisation()
+POTENTIAL_1_1_4FII = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 1, 1)
+POTENTIAL_1_1_4FII_CALC = POTENTIAL_1_1_4FII.parallelisation()
+if rank==0:
+    print(f"At (5cm, 5cm): {POTENTIAL_50_50_4FII_CALC[1]:.4f}V")
+    print(f"At (2.5cm, 2.5cm): {POTENTIAL_25_25_4FII_CALC[1]:.4f}V")
+    print(f"At (0.1cm, 2.5cm): {POTENTIAL_1_25_4FII_CALC[1]:.4f}V")
+    print(f"At (0.1cm, 0.1cm): {POTENTIAL_1_1_4FII_CALC[1]:.4f}V")
+    print()
+
+# (iii)
+    print("iii) with BC: Top and left edges: +2V, bottom edge: 0V, right edge: -4V")
+init_grid = PoissonSolver2D(0.10, 21, no_of_samples)
+
+phi_12 = init_grid.phi
+phi_12 = init_grid.set_boundary_conditions('tl2_b0_r-4')
+phi_12 = init_grid.overrelax()
+f_12 = init_grid.apply_charge_distribution('exp_decay')
+POTENTIAL_50_50_4FIII = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 10, 10)
+POTENTIAL_50_50_4FIII_CALC = POTENTIAL_50_50_4FIII.parallelisation()
+POTENTIAL_25_25_4FIII = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 5, 5)
+POTENTIAL_25_25_4FIII_CALC = POTENTIAL_25_25_4FIII.parallelisation()
+POTENTIAL_1_25_4FIII = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 1, 5)
+POTENTIAL_1_25_4FIII_CALC = POTENTIAL_1_25_4FIII.parallelisation()
+POTENTIAL_1_1_4FIII = MonteCarlo(init_grid, init_grid.potential_via_greens, 0, 10, 1, 1)
+POTENTIAL_1_1_4FIII_CALC = POTENTIAL_1_1_4FIII.parallelisation()
+if rank==0:
+    print(f"At (5cm, 5cm): {POTENTIAL_50_50_4FIII_CALC[1]:.4f}V")
+    print(f"At (2.5cm, 2.5cm): {POTENTIAL_25_25_4FIII_CALC[1]:.4f}V")
+    print(f"At (0.1cm, 2.5cm): {POTENTIAL_1_25_4FIII_CALC[1]:.4f}V")
+    print(f"At (0.1cm, 0.1cm): {POTENTIAL_1_1_4FIII_CALC[1]:.4f}V")
+    print()
+
+
+
+# Recording the end time of the code, and taking the difference from the start time to find how
+# long the code took to run. This allows for comparison of runtimes for varying number of
+# processors. Getting an estimate of the parallel efficiency of the code.
+if rank==0:
+    end_time = time.time()
+    execution_time = end_time - start_time
+    print(f"The code took {execution_time} seconds to run for {no_of_ranks} processor")
+
+# If running using 8 processors, it might be beneficial to comment out the MPI.Finalize() command
+# below. For an unknown reason, the runtime increases significantly: using a sample size of
+# no_of_samples = 100000000/no_of_ranks, the runtime jumps from ~21 seconds to ~80 seconds with an
+# uncommented MPI.Finalize().
+#MPI.Finalize()
