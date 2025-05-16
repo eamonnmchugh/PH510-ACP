@@ -29,27 +29,31 @@ init_grid = PoissonSolver2D(0.10, 101, no_of_samples)
 # (a)
 A_MONTE = init_grid.greens_function(50, 50)
 #A_CALC = A_MONTE.parallelisation_array()
-init_grid.plot_value(A_MONTE, "Green's Function At (5cm, 5cm)", 10, "Probability")
-init_grid.plot_value(init_grid.site_visits, 'Number of Site Visits At (5cm, 5cm)', 10,
-'Number of Site Visits')
+init_grid.plot_value(A_MONTE, "Edge Potential Related Green's Function At (5cm, 5cm)", 10,
+"Probability")
+init_grid.plot_value(init_grid.greens_charge(), "Charge Related Green's Function At (5cm, 5cm)",
+10, 'Probability')
 
 # (b)
 B_MONTE = init_grid.greens_function(25, 25)
-init_grid.plot_value(B_MONTE, "Green's Function At (2.5cm, 2.5cm)", 10, "Probability")
-init_grid.plot_value(init_grid.site_visits, 'Number of Site Visits At (2.5cm, 2.5cm)', 10,
-'Number of Site Visits')
+init_grid.plot_value(B_MONTE, "Edge Potential Related Green's Function At (2.5cm, 2.5cm)", 10,
+"Probability")
+init_grid.plot_value(init_grid.greens_charge(),
+"Charge Related Green's Function At (2.5cm, 2.5cm)", 10, 'Probability')
 
 # (c)
 C_MONTE = init_grid.greens_function(1, 25)
-init_grid.plot_value(C_MONTE, "Green's Function At (0.1cm, 2.5cm)", 10, "Probability")
-init_grid.plot_value(init_grid.site_visits, 'Number of Site Visits At (0.1cm, 2.5cm)', 10,
-'Number of Site Visits')
+init_grid.plot_value(C_MONTE, "Edge Potential Related Green's Function At (0.1cm, 2.5cm)", 10,
+"Probability")
+init_grid.plot_value(init_grid.greens_charge(),
+"Charge Related Green's Function At (0.1cm, 2.5cm)", 10, 'Probability')
 
 # (d)
 D_MONTE = init_grid.greens_function(1, 1)
-init_grid.plot_value(D_MONTE, "Green's Function At (0.1cm, 0.1cm)", 10, "Probability")
-init_grid.plot_value(init_grid.site_visits, 'Number of Site Visits At (0.1cm, 0.1cm)', 10,
-'Number of Site Visits')
+init_grid.plot_value(D_MONTE, "Edge Potential Related Green's Function At (0.1cm, 0.1cm)", 10,
+"Probability")
+init_grid.plot_value(init_grid.greens_charge(),
+"Charge Related Green's Function At (0.1cm, 0.1cm)", 10, 'Probability')
 print(f"At centre point (5cm, 5cm):\n{A_MONTE}")
 print(f"At (2.5cm, 2.5cm):\n{B_MONTE}")
 print(f"At (0.1cm, 2.5cm):\n{C_MONTE}")
