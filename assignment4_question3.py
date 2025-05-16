@@ -4,19 +4,9 @@
 This code is suitably licensed:
 https://github.com/eamonnmchugh/PH510-ACP/blob/Assignment-4/MIT%20Licence
 
-This program makes use of Monte Carlo simulations to find the estimate for a given function. Monte 
-Carlo simulations are used to simplify complex integrations through repeated random sampling. This 
-is done by finding the average value of the function across a specified range. This expectation 
-value is then multiplied by the range, which approximates the integral of the function. Finally, 
-the function's variance can be found to obtain the uncertainty in the integral's estimate.
-
-In this case, the Monte Carlo is ran for the class 'PoissonSolver2D'. This class generates an NxN
-grid of points whose potentials and charges can be manually set. after applying these charges and
-potentials, and over-relaxing until the grid is in a state of equilibrium, random walkers are used
-by freely moving throughout the grid starting at a point (i, j) until they reach a boundary
-(x_b, y_b), at which point the potential is recorded. After repeated use of these walkers, a
-probability map (Green's function) is generated, giving us an estimate of the potential at the
-starting point.
+Smaller version of the file 'assignment4.py' used to plot the Green's functions and number of site
+visits in Task 3. This could not be done in the main file as plt.show() could not be used when
+submitting a job.
 """
 
 
