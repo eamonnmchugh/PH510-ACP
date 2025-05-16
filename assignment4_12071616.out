@@ -1,0 +1,586 @@
+===================================================================================
+SLURM Job ID:            12071616
+Submit time:             Thu May 15 23:12:35 BST 2025 (Unix Epoch time: 1747347155)
+Start time:              Thu May 15 23:13:58 BST 2025 (Unix Epoch time: 1747347238)
+No. nodes:               1
+No. tasks:               16
+Job name:                assignment4
+Account:                 teaching
+QoS:                     teaching
+Partition (queue):       teaching
+Submit directory:        /users/cgb20140/Documents/PH510/Assignment_4
+Script name:             /users/cgb20140/Documents/PH510/Assignment_4/Assignment4.sh
+Master node:             wee10
+Nodes used:              wee10
+Task distribution:       block:block
+===================================================================================
+
+
+--------------------------------------------------------------------
+Your code has been rated at 10.00/10 (previous run: 10.00/10, +0.00)
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+16 Processors:
+
+Exercise 3
+Green's function evaluation for a square grid of side length 10cm:
+At centre point (5cm, 5cm) the error of the Green's function was:
+3.985351291631406e-06
+At (2.5cm, 2.5cm) the error of the Green's function was:
+3.979357595218849e-06
+At (0.1cm, 2.5cm) the error of the Green's function was:
+3.933527988902581e-06
+At (0.1cm, 0.1cm) the error of the Green's function was:
+3.8890033731155546e-06
+
+Exercise 4
+Potential calculation via Green's function for a square grid of side length 10cm:
+a) with boundary conditions: All edges uniformly at +1V
+At (5cm, 5cm): 1.0141V
+At (2.5cm, 2.5cm): 1.0141V
+At (0.1cm, 2.5cm): 1.0141V
+At (0.1cm, 0.1cm): 1.0141V
+
+b) with boundary conditions: Top and bottom edges: +1V, left and right edges: -1V
+At (5cm, 5cm): 0.0189V
+At (2.5cm, 2.5cm): 0.0174V
+At (0.1cm, 2.5cm): 0.7522V
+At (0.1cm, 0.1cm): 0.0098V
+
+c) with boundary conditions: Top and left edges: +2V, bottom edge: 0V, right edge: -4V
+At (5cm, 5cm): 0.0248V
+At (2.5cm, 2.5cm): 0.7470V
+At (0.1cm, 2.5cm): 0.1959V
+At (0.1cm, 0.1cm): 0.9992V
+
+d) Repeat, with uniform charge of 10C throughout the grid
+i) with BC: All edges uniformly at +1V
+At (5cm, 5cm): 1.0439V
+At (2.5cm, 2.5cm): 1.0324V
+At (0.1cm, 2.5cm): 1.0193V
+At (0.1cm, 0.1cm): 1.0158V
+
+ii) with BC: Top and bottom edges: +1V, left and right edges: -1V
+At (5cm, 5cm): 0.0358V
+At (2.5cm, 2.5cm): 0.0255V
+At (0.1cm, 2.5cm): 0.7542V
+At (0.1cm, 0.1cm): 0.0155V
+
+iii) with BC: Top and left edges: +2V, bottom edge: 0V, right edge: -4V
+At (5cm, 5cm): 0.0369V
+At (2.5cm, 2.5cm): 0.7596V
+At (0.1cm, 2.5cm): 0.2001V
+At (0.1cm, 0.1cm): 1.0070V
+
+e) Repeat, with uniform charge gradient from 1C at top to 0C at bottom
+i) with BC: All edges uniformly at +1V
+At (5cm, 5cm): 1.0156V
+At (2.5cm, 2.5cm): 1.0148V
+At (0.1cm, 2.5cm): 1.0142V
+At (0.1cm, 0.1cm): 1.0141V
+
+ii) with BC: Top and bottom edges: +1V, left and right edges: -1V
+At (5cm, 5cm): 0.0130V
+At (2.5cm, 2.5cm): 0.0159V
+At (0.1cm, 2.5cm): 0.7549V
+At (0.1cm, 0.1cm): 0.0098V
+
+iii) with BC: Top and left edges: +2V, bottom edge: 0V, right edge: -4V
+At (5cm, 5cm): 0.0329V
+At (2.5cm, 2.5cm): 0.7423V
+At (0.1cm, 2.5cm): 0.2023V
+At (0.1cm, 0.1cm): 1.0037V
+
+f) Repeat, with exponentially decaying charge exp(-2000|r|) placed at centre of grid
+i) with BC: All edges uniformly at +1V
+At (5cm, 5cm): 1.0142V
+At (2.5cm, 2.5cm): 1.0141V
+At (0.1cm, 2.5cm): 1.0141V
+At (0.1cm, 0.1cm): 1.0141V
+
+ii) with BC: Top and bottom edges: +1V, left and right edges: -1V
+At (5cm, 5cm): 0.0106V
+At (2.5cm, 2.5cm): 0.0102V
+At (0.1cm, 2.5cm): 0.7508V
+At (0.1cm, 0.1cm): 0.0131V
+
+iii) with BC: Top and left edges: +2V, bottom edge: 0V, right edge: -4V
+At (5cm, 5cm): 0.0245V
+At (2.5cm, 2.5cm): 0.7482V
+At (0.1cm, 2.5cm): 0.1942V
+At (0.1cm, 0.1cm): 1.0048V
+
+Exercise 5
+Potential after over-relaxation of grid with side length 10cm:
+i) with BC: All edges uniformly at +1V
+At (5cm, 5cm): 1.0000V
+At (2.5cm, 2.5cm): 1.0000V
+At (0.1cm, 2.5cm): 1.0000V
+At (0.1cm, 0.1cm): 1.0000V
+
+ii) with BC: Top and bottom edges: +1V, left and right edges: -1V
+At (5cm, 5cm): -0.0000V
+At (2.5cm, 2.5cm): 0.0000V
+At (0.1cm, 2.5cm): 0.7412V
+At (0.1cm, 0.1cm): 0.0000V
+
+iii) with BC: Top and left edges: +2V, bottom edge: 0V, right edge: -4V
+At (5cm, 5cm): -0.0000V
+At (2.5cm, 2.5cm): 0.7275V
+At (0.1cm, 2.5cm): 0.1924V
+At (0.1cm, 0.1cm): 0.9890V
+
+The code took 174.42132019996643 seconds to run for 16 processor
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+8 Processors:
+
+Exercise 3
+Green's function evaluation for a square grid of side length 10cm:
+At centre point (5cm, 5cm) the error of the Green's function was:
+3.92528427597426e-06
+At (2.5cm, 2.5cm) the error of the Green's function was:
+3.924569918707212e-06
+At (0.1cm, 2.5cm) the error of the Green's function was:
+3.9001719099942905e-06
+At (0.1cm, 0.1cm) the error of the Green's function was:
+3.877638429503964e-06
+
+Exercise 4
+Potential calculation via Green's function for a square grid of side length 10cm:
+a) with boundary conditions: All edges uniformly at +1V
+At (5cm, 5cm): 1.0141V
+At (2.5cm, 2.5cm): 1.0141V
+At (0.1cm, 2.5cm): 1.0141V
+At (0.1cm, 0.1cm): 1.0141V
+
+b) with boundary conditions: Top and bottom edges: +1V, left and right edges: -1V
+At (5cm, 5cm): 0.0122V
+At (2.5cm, 2.5cm): 0.0121V
+At (0.1cm, 2.5cm): 0.7525V
+At (0.1cm, 0.1cm): 0.0090V
+
+c) with boundary conditions: Top and left edges: +2V, bottom edge: 0V, right edge: -4V
+At (5cm, 5cm): 0.0305V
+At (2.5cm, 2.5cm): 0.7459V
+At (0.1cm, 2.5cm): 0.1943V
+At (0.1cm, 0.1cm): 1.0056V
+
+d) Repeat, with uniform charge of 10C throughout the grid
+i) with BC: All edges uniformly at +1V
+At (5cm, 5cm): 1.0440V
+At (2.5cm, 2.5cm): 1.0325V
+At (0.1cm, 2.5cm): 1.0193V
+At (0.1cm, 0.1cm): 1.0159V
+
+ii) with BC: Top and bottom edges: +1V, left and right edges: -1V
+At (5cm, 5cm): 0.0321V
+At (2.5cm, 2.5cm): 0.0243V
+At (0.1cm, 2.5cm): 0.7540V
+At (0.1cm, 0.1cm): 0.0071V
+
+iii) with BC: Top and left edges: +2V, bottom edge: 0V, right edge: -4V
+At (5cm, 5cm): 0.0307V
+At (2.5cm, 2.5cm): 0.7558V
+At (0.1cm, 2.5cm): 0.2008V
+At (0.1cm, 0.1cm): 1.0039V
+
+e) Repeat, with uniform charge gradient from 1C at top to 0C at bottom
+i) with BC: All edges uniformly at +1V
+At (5cm, 5cm): 1.0156V
+At (2.5cm, 2.5cm): 1.0148V
+At (0.1cm, 2.5cm): 1.0142V
+At (0.1cm, 0.1cm): 1.0141V
+
+ii) with BC: Top and bottom edges: +1V, left and right edges: -1V
+At (5cm, 5cm): 0.0076V
+At (2.5cm, 2.5cm): 0.0111V
+At (0.1cm, 2.5cm): 0.7530V
+At (0.1cm, 0.1cm): 0.0069V
+
+iii) with BC: Top and left edges: +2V, bottom edge: 0V, right edge: -4V
+At (5cm, 5cm): 0.0258V
+At (2.5cm, 2.5cm): 0.7375V
+At (0.1cm, 2.5cm): 0.1961V
+At (0.1cm, 0.1cm): 1.0049V
+
+f) Repeat, with exponentially decaying charge exp(-2000|r|) placed at centre of grid
+i) with BC: All edges uniformly at +1V
+At (5cm, 5cm): 1.0142V
+At (2.5cm, 2.5cm): 1.0141V
+At (0.1cm, 2.5cm): 1.0141V
+At (0.1cm, 0.1cm): 1.0141V
+
+ii) with BC: Top and bottom edges: +1V, left and right edges: -1V
+At (5cm, 5cm): 0.0105V
+At (2.5cm, 2.5cm): 0.0091V
+At (0.1cm, 2.5cm): 0.7509V
+At (0.1cm, 0.1cm): 0.0062V
+
+iii) with BC: Top and left edges: +2V, bottom edge: 0V, right edge: -4V
+At (5cm, 5cm): 0.0174V
+At (2.5cm, 2.5cm): 0.7304V
+At (0.1cm, 2.5cm): 0.1959V
+At (0.1cm, 0.1cm): 1.0008V
+
+Exercise 5
+Potential after over-relaxation of grid with side length 10cm:
+i) with BC: All edges uniformly at +1V
+At (5cm, 5cm): 1.0000V
+At (2.5cm, 2.5cm): 1.0000V
+At (0.1cm, 2.5cm): 1.0000V
+At (0.1cm, 0.1cm): 1.0000V
+
+ii) with BC: Top and bottom edges: +1V, left and right edges: -1V
+At (5cm, 5cm): 0.0000V
+At (2.5cm, 2.5cm): 0.0000V
+At (0.1cm, 2.5cm): 0.7412V
+At (0.1cm, 0.1cm): 0.0000V
+
+iii) with BC: Top and left edges: +2V, bottom edge: 0V, right edge: -4V
+At (5cm, 5cm): 0.0000V
+At (2.5cm, 2.5cm): 0.7275V
+At (0.1cm, 2.5cm): 0.1924V
+At (0.1cm, 0.1cm): 0.9890V
+
+The code took 313.8546199798584 seconds to run for 8 processor
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+4 Processors:
+
+Exercise 3
+Green's function evaluation for a square grid of side length 10cm:
+At centre point (5cm, 5cm) the error of the Green's function was:
+3.897473056400107e-06
+At (2.5cm, 2.5cm) the error of the Green's function was:
+3.893361191078875e-06
+At (0.1cm, 2.5cm) the error of the Green's function was:
+3.880878045469259e-06
+At (0.1cm, 0.1cm) the error of the Green's function was:
+3.870065495316927e-06
+
+Exercise 4
+Potential calculation via Green's function for a square grid of side length 10cm:
+a) with boundary conditions: All edges uniformly at +1V
+At (5cm, 5cm): 1.0141V
+At (2.5cm, 2.5cm): 1.0141V
+At (0.1cm, 2.5cm): 1.0141V
+At (0.1cm, 0.1cm): 1.0141V
+
+b) with boundary conditions: Top and bottom edges: +1V, left and right edges: -1V
+At (5cm, 5cm): 0.0055V
+At (2.5cm, 2.5cm): 0.0062V
+At (0.1cm, 2.5cm): 0.7476V
+At (0.1cm, 0.1cm): 0.0118V
+
+c) with boundary conditions: Top and left edges: +2V, bottom edge: 0V, right edge: -4V
+At (5cm, 5cm): 0.0158V
+At (2.5cm, 2.5cm): 0.7345V
+At (0.1cm, 2.5cm): 0.1956V
+At (0.1cm, 0.1cm): 0.9990V
+
+d) Repeat, with uniform charge of 10C throughout the grid
+i) with BC: All edges uniformly at +1V
+At (5cm, 5cm): 1.0440V
+At (2.5cm, 2.5cm): 1.0324V
+At (0.1cm, 2.5cm): 1.0193V
+At (0.1cm, 0.1cm): 1.0158V
+
+ii) with BC: Top and bottom edges: +1V, left and right edges: -1V
+At (5cm, 5cm): 0.0293V
+At (2.5cm, 2.5cm): 0.0233V
+At (0.1cm, 2.5cm): 0.7574V
+At (0.1cm, 0.1cm): 0.0072V
+
+iii) with BC: Top and left edges: +2V, bottom edge: 0V, right edge: -4V
+At (5cm, 5cm): 0.0459V
+At (2.5cm, 2.5cm): 0.7594V
+At (0.1cm, 2.5cm): 0.1989V
+At (0.1cm, 0.1cm): 1.0109V
+
+e) Repeat, with uniform charge gradient from 1C at top to 0C at bottom
+i) with BC: All edges uniformly at +1V
+At (5cm, 5cm): 1.0156V
+At (2.5cm, 2.5cm): 1.0148V
+At (0.1cm, 2.5cm): 1.0142V
+At (0.1cm, 0.1cm): 1.0141V
+
+ii) with BC: Top and bottom edges: +1V, left and right edges: -1V
+At (5cm, 5cm): 0.0073V
+At (2.5cm, 2.5cm): 0.0075V
+At (0.1cm, 2.5cm): 0.7493V
+At (0.1cm, 0.1cm): 0.0029V
+
+iii) with BC: Top and left edges: +2V, bottom edge: 0V, right edge: -4V
+At (5cm, 5cm): 0.0271V
+At (2.5cm, 2.5cm): 0.7411V
+At (0.1cm, 2.5cm): 0.1934V
+At (0.1cm, 0.1cm): 1.0057V
+
+f) Repeat, with exponentially decaying charge exp(-2000|r|) placed at centre of grid
+i) with BC: All edges uniformly at +1V
+At (5cm, 5cm): 1.0142V
+At (2.5cm, 2.5cm): 1.0141V
+At (0.1cm, 2.5cm): 1.0141V
+At (0.1cm, 0.1cm): 1.0141V
+
+ii) with BC: Top and bottom edges: +1V, left and right edges: -1V
+At (5cm, 5cm): 0.0051V
+At (2.5cm, 2.5cm): 0.0093V
+At (0.1cm, 2.5cm): 0.7541V
+At (0.1cm, 0.1cm): 0.0064V
+
+iii) with BC: Top and left edges: +2V, bottom edge: 0V, right edge: -4V
+At (5cm, 5cm): 0.0208V
+At (2.5cm, 2.5cm): 0.7376V
+At (0.1cm, 2.5cm): 0.1938V
+At (0.1cm, 0.1cm): 1.0036V
+
+Exercise 5
+Potential after over-relaxation of grid with side length 10cm:
+i) with BC: All edges uniformly at +1V
+At (5cm, 5cm): 1.0000V
+At (2.5cm, 2.5cm): 1.0000V
+At (0.1cm, 2.5cm): 1.0000V
+At (0.1cm, 0.1cm): 1.0000V
+
+ii) with BC: Top and bottom edges: +1V, left and right edges: -1V
+At (5cm, 5cm): 0.0000V
+At (2.5cm, 2.5cm): -0.0000V
+At (0.1cm, 2.5cm): 0.7412V
+At (0.1cm, 0.1cm): 0.0000V
+
+iii) with BC: Top and left edges: +2V, bottom edge: 0V, right edge: -4V
+At (5cm, 5cm): -0.0000V
+At (2.5cm, 2.5cm): 0.7275V
+At (0.1cm, 2.5cm): 0.1924V
+At (0.1cm, 0.1cm): 0.9890V
+
+The code took 601.7725446224213 seconds to run for 4 processor
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2 Processors:
+
+Exercise 3
+Green's function evaluation for a square grid of side length 10cm:
+At centre point (5cm, 5cm) the error of the Green's function was:
+3.8821648032784445e-06
+At (2.5cm, 2.5cm) the error of the Green's function was:
+3.877815945078412e-06
+At (0.1cm, 2.5cm) the error of the Green's function was:
+3.868782199147476e-06
+At (0.1cm, 0.1cm) the error of the Green's function was:
+3.865464995479614e-06
+
+Exercise 4
+Potential calculation via Green's function for a square grid of side length 10cm:
+a) with boundary conditions: All edges uniformly at +1V
+At (5cm, 5cm): 1.0141V
+At (2.5cm, 2.5cm): 1.0141V
+At (0.1cm, 2.5cm): 1.0141V
+At (0.1cm, 0.1cm): 1.0141V
+
+b) with boundary conditions: Top and bottom edges: +1V, left and right edges: -1V
+At (5cm, 5cm): 0.0030V
+At (2.5cm, 2.5cm): 0.0094V
+At (0.1cm, 2.5cm): 0.7509V
+At (0.1cm, 0.1cm): 0.0016V
+
+c) with boundary conditions: Top and left edges: +2V, bottom edge: 0V, right edge: -4V
+At (5cm, 5cm): 0.0044V
+At (2.5cm, 2.5cm): 0.7331V
+At (0.1cm, 2.5cm): 0.1966V
+At (0.1cm, 0.1cm): 1.0041V
+
+d) Repeat, with uniform charge of 10C throughout the grid
+i) with BC: All edges uniformly at +1V
+At (5cm, 5cm): 1.0439V
+At (2.5cm, 2.5cm): 1.0325V
+At (0.1cm, 2.5cm): 1.0193V
+At (0.1cm, 0.1cm): 1.0158V
+
+ii) with BC: Top and bottom edges: +1V, left and right edges: -1V
+At (5cm, 5cm): 0.0324V
+At (2.5cm, 2.5cm): 0.0177V
+At (0.1cm, 2.5cm): 0.7583V
+At (0.1cm, 0.1cm): 0.0038V
+
+iii) with BC: Top and left edges: +2V, bottom edge: 0V, right edge: -4V
+At (5cm, 5cm): 0.0268V
+At (2.5cm, 2.5cm): 0.7639V
+At (0.1cm, 2.5cm): 0.2027V
+At (0.1cm, 0.1cm): 1.0055V
+
+e) Repeat, with uniform charge gradient from 1C at top to 0C at bottom
+i) with BC: All edges uniformly at +1V
+At (5cm, 5cm): 1.0156V
+At (2.5cm, 2.5cm): 1.0148V
+At (0.1cm, 2.5cm): 1.0142V
+At (0.1cm, 0.1cm): 1.0141V
+
+ii) with BC: Top and bottom edges: +1V, left and right edges: -1V
+At (5cm, 5cm): 0.0043V
+At (2.5cm, 2.5cm): 0.0036V
+At (0.1cm, 2.5cm): 0.7494V
+At (0.1cm, 0.1cm): 0.0032V
+
+iii) with BC: Top and left edges: +2V, bottom edge: 0V, right edge: -4V
+At (5cm, 5cm): 0.0177V
+At (2.5cm, 2.5cm): 0.7355V
+At (0.1cm, 2.5cm): 0.1966V
+At (0.1cm, 0.1cm): 1.0002V
+
+f) Repeat, with exponentially decaying charge exp(-2000|r|) placed at centre of grid
+i) with BC: All edges uniformly at +1V
+At (5cm, 5cm): 1.0142V
+At (2.5cm, 2.5cm): 1.0141V
+At (0.1cm, 2.5cm): 1.0141V
+At (0.1cm, 0.1cm): 1.0141V
+
+ii) with BC: Top and bottom edges: +1V, left and right edges: -1V
+At (5cm, 5cm): 0.0029V
+At (2.5cm, 2.5cm): 0.0040V
+At (0.1cm, 2.5cm): 0.7497V
+At (0.1cm, 0.1cm): 0.0040V
+
+iii) with BC: Top and left edges: +2V, bottom edge: 0V, right edge: -4V
+At (5cm, 5cm): 0.0104V
+At (2.5cm, 2.5cm): 0.7288V
+At (0.1cm, 2.5cm): 0.1924V
+At (0.1cm, 0.1cm): 0.9996V
+
+Exercise 5
+Potential after over-relaxation of grid with side length 10cm:
+i) with BC: All edges uniformly at +1V
+At (5cm, 5cm): 1.0000V
+At (2.5cm, 2.5cm): 1.0000V
+At (0.1cm, 2.5cm): 1.0000V
+At (0.1cm, 0.1cm): 1.0000V
+
+ii) with BC: Top and bottom edges: +1V, left and right edges: -1V
+At (5cm, 5cm): 0.0000V
+At (2.5cm, 2.5cm): 0.0000V
+At (0.1cm, 2.5cm): 0.7412V
+At (0.1cm, 0.1cm): 0.0000V
+
+iii) with BC: Top and left edges: +2V, bottom edge: 0V, right edge: -4V
+At (5cm, 5cm): -0.0000V
+At (2.5cm, 2.5cm): 0.7275V
+At (0.1cm, 2.5cm): 0.1924V
+At (0.1cm, 0.1cm): 0.9890V
+
+The code took 1177.1344771385193 seconds to run for 2 processor
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1 Processors:
+
+Exercise 3
+Green's function evaluation for a square grid of side length 10cm:
+At centre point (5cm, 5cm) the error of the Green's function was:
+3.874435596787387e-06
+At (2.5cm, 2.5cm) the error of the Green's function was:
+3.870101866602681e-06
+At (0.1cm, 2.5cm) the error of the Green's function was:
+3.863508103871341e-06
+At (0.1cm, 0.1cm) the error of the Green's function was:
+3.863135792394741e-06
+
+Exercise 4
+Potential calculation via Green's function for a square grid of side length 10cm:
+a) with boundary conditions: All edges uniformly at +1V
+At (5cm, 5cm): 1.0141V
+At (2.5cm, 2.5cm): 1.0141V
+At (0.1cm, 2.5cm): 1.0141V
+At (0.1cm, 0.1cm): 1.0141V
+
+b) with boundary conditions: Top and bottom edges: +1V, left and right edges: -1V
+At (5cm, 5cm): 0.0033V
+At (2.5cm, 2.5cm): 0.0033V
+At (0.1cm, 2.5cm): 0.7530V
+At (0.1cm, 0.1cm): 0.0030V
+
+c) with boundary conditions: Top and left edges: +2V, bottom edge: 0V, right edge: -4V
+At (5cm, 5cm): 0.0015V
+At (2.5cm, 2.5cm): 0.7381V
+At (0.1cm, 2.5cm): 0.1983V
+At (0.1cm, 0.1cm): 1.0031V
+
+d) Repeat, with uniform charge of 10C throughout the grid
+i) with BC: All edges uniformly at +1V
+At (5cm, 5cm): 1.0439V
+At (2.5cm, 2.5cm): 1.0324V
+At (0.1cm, 2.5cm): 1.0193V
+At (0.1cm, 0.1cm): 1.0159V
+
+ii) with BC: Top and bottom edges: +1V, left and right edges: -1V
+At (5cm, 5cm): 0.0316V
+At (2.5cm, 2.5cm): 0.0215V
+At (0.1cm, 2.5cm): 0.7593V
+At (0.1cm, 0.1cm): 0.0007V
+
+iii) with BC: Top and left edges: +2V, bottom edge: 0V, right edge: -4V
+At (5cm, 5cm): 0.0260V
+At (2.5cm, 2.5cm): 0.7534V
+At (0.1cm, 2.5cm): 0.2057V
+At (0.1cm, 0.1cm): 1.0025V
+
+e) Repeat, with uniform charge gradient from 1C at top to 0C at bottom
+i) with BC: All edges uniformly at +1V
+At (5cm, 5cm): 1.0156V
+At (2.5cm, 2.5cm): 1.0148V
+At (0.1cm, 2.5cm): 1.0142V
+At (0.1cm, 0.1cm): 1.0141V
+
+ii) with BC: Top and bottom edges: +1V, left and right edges: -1V
+At (5cm, 5cm): 0.0001V
+At (2.5cm, 2.5cm): 0.0046V
+At (0.1cm, 2.5cm): 0.7535V
+At (0.1cm, 0.1cm): 0.0008V
+
+iii) with BC: Top and left edges: +2V, bottom edge: 0V, right edge: -4V
+At (5cm, 5cm): 0.0087V
+At (2.5cm, 2.5cm): 0.7366V
+At (0.1cm, 2.5cm): 0.1958V
+At (0.1cm, 0.1cm): 1.0019V
+
+f) Repeat, with exponentially decaying charge exp(-2000|r|) placed at centre of grid
+i) with BC: All edges uniformly at +1V
+At (5cm, 5cm): 1.0142V
+At (2.5cm, 2.5cm): 1.0141V
+At (0.1cm, 2.5cm): 1.0141V
+At (0.1cm, 0.1cm): 1.0141V
+
+ii) with BC: Top and bottom edges: +1V, left and right edges: -1V
+At (5cm, 5cm): 0.0012V
+At (2.5cm, 2.5cm): 0.0003V
+At (0.1cm, 2.5cm): 0.7503V
+At (0.1cm, 0.1cm): 0.0010V
+
+iii) with BC: Top and left edges: +2V, bottom edge: 0V, right edge: -4V
+At (5cm, 5cm): 0.0040V
+At (2.5cm, 2.5cm): 0.7304V
+At (0.1cm, 2.5cm): 0.1958V
+At (0.1cm, 0.1cm): 1.0028V
+
+Exercise 5
+Potential after over-relaxation of grid with side length 10cm:
+i) with BC: All edges uniformly at +1V
+At (5cm, 5cm): 1.0000V
+At (2.5cm, 2.5cm): 1.0000V
+At (0.1cm, 2.5cm): 1.0000V
+At (0.1cm, 0.1cm): 1.0000V
+
+ii) with BC: Top and bottom edges: +1V, left and right edges: -1V
+At (5cm, 5cm): 0.0000V
+At (2.5cm, 2.5cm): -0.0000V
+At (0.1cm, 2.5cm): 0.7412V
+At (0.1cm, 0.1cm): -0.0000V
+
+iii) with BC: Top and left edges: +2V, bottom edge: 0V, right edge: -4V
+At (5cm, 5cm): 0.0000V
+At (2.5cm, 2.5cm): 0.7275V
+At (0.1cm, 2.5cm): 0.1924V
+At (0.1cm, 0.1cm): 0.9890V
+
+The code took 2312.9727420806885 seconds to run for 1 processor
+===================================================================================
+SLURM job 12071616 ended:     Fri May 16 00:28:02 BST 2025 (Unix Epoch time: 1747351682)
+This is an estimated end time using the 'date' command from node wee10.hpc.strath.ac.uk
+For accurate timings, use 'sacct -j 12071616 -X --format=Submit,Start,End,Elapsed'
+======================================================================================

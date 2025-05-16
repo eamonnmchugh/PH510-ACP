@@ -132,5 +132,5 @@ class MonteCarlo:
             variance = (val_sq_mean / no_of_ranks - np.square(mean)) / self.class_used.n
             # Element-wise uncertainty
             uncertainty = np.sqrt(variance) * integral_term
-            return mean, integral, uncertainty
+            return mean, integral, np.mean(uncertainty)
         return None

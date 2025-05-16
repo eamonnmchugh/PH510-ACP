@@ -6,7 +6,8 @@ https://github.com/eamonnmchugh/PH510-ACP/blob/Assignment-4/MIT%20Licence
 
 This code creates a class 'PoissonSolver2D' to generate an NxN grid of points. The potentials and
 charges of each point can be set (some presets have been built below). After setting these, the
-grid is relaxed by 'bleeding' the potentials throughout the grid (i.e. repeated averaging of neighbouring points until an equilibrium is reached. After this, the potential can be evaluated at
+grid is relaxed by 'bleeding' the potentials throughout the grid (i.e. repeated averaging of 
+neighbouring points until an equilibrium is reached. After this, the potential can be evaluated at
 any specified point using random walkers. These walkers freely move through the grid from a
 starting point (i, j) until they reach a boundary position (x_b, y_b). After repeated use of the
 walkers, a probability map (Green's function) is generated, telling us how often each site is
@@ -39,9 +40,9 @@ class PoissonSolver2D:
         self.phi = np.random.uniform(0, 10, (self.n, self.n))
         self.f = np.zeros((self.n, self.n))
         self.fixed_potentials = set()
-        self.fixed_charges = set()
         self.d = 2
         self.no_of_samples = no_of_samples
+        self.site_visits = set()
 
     def set_potential(self, x, y, potential):
         """
@@ -64,8 +65,7 @@ class PoissonSolver2D:
         """
         if 0 <= x < self.n and 0 <= y < self.n:
             return self.phi[x, y]
-        else:
-            raise ValueError(f"Invalid coordinates: ({x}, {y}) outside grid bounds.")
+        raise ValueError(f"Invalid coordinates: ({x}, {y}) outside grid bounds.")
 
     def set_boundary_conditions(self, bc_type):
         """
@@ -120,7 +120,7 @@ class PoissonSolver2D:
 
         elif distribution_type == 'linear_gradient_top_to_bottom':
             for i in range(self.n):
-                self.f[i, :] = 1 - (i/(self.n - 1))
+                self.f[i, :] = i/(self.n - 1)
 
         elif distribution_type == 'exp_decay':
             x = np.linspace(0, self.l, self.n)
@@ -141,7 +141,7 @@ class PoissonSolver2D:
         specified tolerance 'tol', or when the maximum number of iterations 'max_iter' is reached.
         """
         omega = 2/(1 + np.sin(np.pi/self.n))
-        for iteration in range(max_iter):
+        for _ in range(max_iter):
             max_delta = 0
             for i in range(0, self.n):
                 for j in range(0, self.n):
@@ -192,7 +192,7 @@ class PoissonSolver2D:
         giving an estimate for the potential at the starting point (i, j).
         """
         potential = []
-        for k in range(self.no_of_samples):
+        for _ in range(self.no_of_samples):
             i, j = starting_point_i, starting_point_j
             while not self.boundary_check(i, j):
                 direction = random.choice(['up', 'down', 'left', 'right'])
@@ -229,7 +229,7 @@ class PoissonSolver2D:
             boundary_hits[(i, 0)] = 0           # Left
             boundary_hits[(i, self.n - 1)] = 0  # Right
 
-        for k in range(self.no_of_samples):
+        for _ in range(self.no_of_samples):
             i, j = starting_point_i, starting_point_j
             while not self.boundary_check(i, j):
                 self.site_visits[(i, j)] += 1
@@ -269,7 +269,7 @@ class PoissonSolver2D:
         position (i, j).
         """
         i, j = starting_point_i, starting_point_j
-        return self.random_walk_probabilities(i, j) + self.greens_charge
+        return self.random_walk_probabilities(i, j) + self.greens_charge()
 
     def potential_via_greens(self, starting_point_i, starting_point_j):
         """
@@ -286,7 +286,7 @@ class PoissonSolver2D:
                 if self.boundary_check(x_b, y_b):
                     term1[x_b, y_b] = greens_laplace[x_b, y_b] * self.phi[x_b, y_b]
         term1_sum = np.sum(term1)
-        term2 = np.sum(self.greens_charge(i, j) * self.f)
+        term2 = np.sum(self.greens_charge() * self.f)
         phi_greens = term1_sum + term2
         return phi_greens
 
